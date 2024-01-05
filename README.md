@@ -6,9 +6,9 @@ Mainly garbage.
 
 - Treesitter.
 - Neovim on path (I'm using nightly).
-- Some language runtimes, else some of the tooling probs ain't going to work.
-- Lua & luarocks on path if faffing around is required.
-- A font patched with powerline symbols set in yr terminal (not essential afaik).
+- Some language runtimes on path, else some of the tooling probs ain't going to work.
+- Lua & luarocks & stylua on path if faffing around is required.
+- A font patched with powerline symbols set in yr terminal I guess.
 
 Assumes Linux of some kind, probably works on other setups if it's put somewhere
 Neovim expects it to be.
