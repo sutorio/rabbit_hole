@@ -1,3 +1,5 @@
+local sutorio_helpers = require("sutorio.helpers")
+
 -- Leader key is set prior to anything else.
 vim.g.mapleader = " "
 -- Add filetypes that are not currently being recognised
@@ -33,7 +35,7 @@ vim.opt.wrap = false
 vim.opt.swapfile = false
 vim.opt.backup = false
 -- I very much want persistent undos, and I want them stored in a central location
-vim.opt.undodir = os.getenv("HOME") .. "/.vim/undodir"
+vim.opt.undodir = sutorio_helpers.path_join(os.getenv("HOME"), "/.vim/undodir")
 vim.opt.undofile = true
 -- Don't keep searches highlighted because it's just annoying.
 vim.opt.hlsearch = false
