@@ -21,13 +21,6 @@ telescope.setup({
         },
     },
     extensions = {
-        file_browser = {
-            hidden = true,
-            grouped = true,
-            mappings = {
-                -- TODO: Need to note down what's annoying in current mappings and adjust accordingly here!
-            },
-        },
         projects = {
             display_type = "full",
         },
@@ -36,7 +29,6 @@ telescope.setup({
 
 telescope.load_extension("noice")
 telescope.load_extension("project")
-telescope.load_extension("file_browser")
 -- }}}
 -- =============================================================================
 -- {{{ Keymaps
@@ -50,6 +42,5 @@ helpers.lmap({
     ["fo"] = { mode = "n", rhs = builtin.oldfiles, desc = "recent files" },
     ["fn"] = { mode = "n", rhs = function() require("noice").cmd("history") end, desc = "notification messages" },
     ["fp"] = { mode = "n", rhs = telescope.extensions.project.project, desc = "project picker" },
-    ["fx"] = { mode = "n", rhs = telescope.extensions.file_browser.file_browser, desc = "file browser" },
 })
 -- }}}

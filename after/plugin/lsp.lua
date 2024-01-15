@@ -4,6 +4,7 @@
 -- =============================================================================
 -- {{{ Aliases
 -- =============================================================================
+local sutorio_helpers = require("sutorio.helpers")
 local lspconfig = require("lspconfig")
 local lsp_defaults = lspconfig.util.default_config
 local luasnip = require("luasnip")
@@ -264,7 +265,7 @@ local SetupLuaSnip = function()
   -- speaking, necessary (LuaSnip will locate the VSCode-style snippets by
   -- default). But it allows other loaders to be added that point to this
   -- directory without much fuss.
-  local snippets_fpath = vim.fn.stdpath("config") .. "/snippets"
+  local snippets_fpath = sutorio_helpers.path_join(vim.fn.stdpath("config"), "snippets")
 
   require("luasnip.loaders.from_vscode").load({ paths = snippets_fpath })
 end

@@ -55,12 +55,15 @@ require("sutorio.helpers").lmap({
     ["es"]  = { mode = "n", rhs = [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]], desc = "start search based on word under cursor" },
     ["ey"]  = { mode = { "n", "v" }, rhs = [["+y]], desc = "yank to system clipboard" },
     ["eY"]  = { mode = "n", rhs = [["+Y]], desc = "yank line to system clipboard" },
+    -- NOTE: this is crap - p is already taken & only got paste below & don't have
+    -- `<space>ep` behaviour &c. Have a think, may need some magic.
+    ["ez"]  = { mode = "n", rhs = [["+p]], desc = "paste from system clipboard" },
     -- -------------------------------------------------------------------------
     -- Neovim-specific/inbuilt system-related tasks
     -- -------------------------------------------------------------------------
     ["n/"] = { mode = "n", rhs = vim.cmd.Ex, desc = "open netrw" },
     ["ns"] = { mode = "n", rhs = "<Cmd>so<Cr>", desc = "source current file" },
-    ["nx"] = { mode = "n", rhs = "<cmd>!chmod +x %<CR>", desc = "chmod +x the current file", opts = { silent = true }},
+    ["nx"] = { mode = "n", rhs = "<Cmd>!chmod +x %<CR>", desc = "chmod +x the current file", opts = { silent = true }},
     -- -------------------------------------------------------------------------
     -- Toggles
     -- -------------------------------------------------------------------------
