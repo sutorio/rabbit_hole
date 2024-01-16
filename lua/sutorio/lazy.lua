@@ -1,4 +1,7 @@
-local lazypath = vim.fn.stdpath("data") .. "/lazy/lazy.nvim"
+local sutorio_helpers = require("sutorio.helpers")
+
+local lazypath = sutorio_helpers.path_join(vim.fn.stdpath("data"), "lazy", "lazy.nvim")
+
 if not vim.loop.fs_stat(lazypath) then
   vim.fn.system({
     "git",
