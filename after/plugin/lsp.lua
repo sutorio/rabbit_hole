@@ -87,14 +87,14 @@ end
 -- =============================================================================
 -- `conform.nvim` frovides the formatting infra. 
 -- NOTE: Conform is used simply because it's much easier to set up than anything
--- else with regards to defaulting back to the formatting implmentation included
+-- else with regards to defaulting back to the formatting implementation included
 -- in the given LSP.
 require("conform").setup({
   formatters_by_ft = {
     css = { "prettierd" },
     lua = { "stylua" },
-    javascript = { "deno_fmt" },
-    typescript = { "deno_fmt" },
+    javascript = { "prettierd" },
+    typescript = {  "prettierd" },
     markdown = { "deno_fmt" },
     json = { "deno_fmt" },
     jsonc = { "deno_fmt" },
@@ -108,7 +108,14 @@ require("conform").setup({
 local lint = require("lint")
 
 lint.linters_by_ft = {
-    markdown = { "vale" },
+    javascript = { "eslint" },
+    javascriptreact = { "eslint" },
+    ["javascript.jsx"] = { "eslint" },
+    typescript = { "eslint" },
+    typescriptreact = { "eslint" },
+    ["typescript.tsx"] = { "eslint" },
+
+    -- markdown = { "vale" },
 }
 
 
@@ -305,18 +312,18 @@ vim.api.nvim_create_autocmd("LspAttach", {
     local opts = { buffer = buffer }
 
     -- stylua: ignore start
-    vim.keymap.set("n", "K",    vim.lsp.buf.hover,           opts)
-    vim.keymap.set("n", "gd",   vim.lsp.buf.definition,      opts)
-    vim.keymap.set("n", "gD",   vim.lsp.buf.declaration,     opts)
-    vim.keymap.set("n", "gi",   vim.lsp.buf.implementation,  opts)
-    vim.keymap.set("n", "go",   vim.lsp.buf.type_definition, opts)
-    vim.keymap.set("n", "gr",   vim.lsp.buf.references,      opts)
-    vim.keymap.set("n", "gs",   vim.lsp.buf.signature_help,  opts)
-    vim.keymap.set("n", "<F2>", vim.lsp.buf.rename,          opts)
-    vim.keymap.set("n", "<F4>", vim.lsp.buf.code_action,     opts)
-    vim.keymap.set("n", "gl",   vim.diagnostic.open_float,   opts)
-    vim.keymap.set("n", "[d",   vim.diagnostic.goto_prev,    opts)
-    vim.keymap.set("n", "]d",   vim.diagnostic.goto_next,    opts)
+    vim.keymap.set("n", "K",    vim.lsp.buf.hover,           { buffer = buffer, desc = "hover info" })
+    vim.keymap.set("n", "gd",   vim.lsp.buf.definition,      { buffer = buffer, desc = "go to definition" })
+    vim.keymap.set("n", "gD",   vim.lsp.buf.declaration,     { buffer = buffer, desc = "go to declaration" })
+    vim.keymap.set("n", "gi",   vim.lsp.buf.implementation,  { buffer = buffer, desc = "go to implementation" })
+    vim.keymap.set("n", "go",   vim.lsp.buf.type_definition, { buffer = buffer, desc = "go to type definition" })
+    vim.keymap.set("n", "gr",   vim.lsp.buf.references,      { buffer = buffer, desc = "show references" })
+    vim.keymap.set("n", "gs",   vim.lsp.buf.signature_help,  { buffer = buffer, desc = "show signature help" })
+    vim.keymap.set("n", "<F2>", vim.lsp.buf.rename,          { buffer = buffer, desc = "rename symbol" })
+    vim.keymap.set("n", "<F4>", vim.lsp.buf.code_action,     { buffer = buffer, desc = "show code actions" })
+    vim.keymap.set("n", "gl",   vim.diagnostic.open_float,   { buffer = buffer, desc = "open float" })
+    vim.keymap.set("n", "[d",   vim.diagnostic.goto_prev,    { buffer = buffer, desc = "go to next" })
+    vim.keymap.set("n", "]d",   vim.diagnostic.goto_next,    { buffer = buffer, desc = "go to previous" })
     -- stylua: ignore end
 
     InitHighlighting(client, buffer)
@@ -331,7 +338,19 @@ end
 
 require("mason").setup({})
 require("mason-lspconfig").setup({
-  ensure_installed = {},
+  ensure_installed = {
+    "cssls",
+    "denols",
+    "emmet_ls",
+    "eslint",
+    "html",
+    "jsonls",
+    "lua_ls",
+    "ruby_ls",
+    "rust_analyzer",
+    "tsserver",
+    "vale_ls",
+  },
   handlers = {
     default_setup,
     denols = deno_ls_custom_config,
