@@ -7,6 +7,7 @@
 local sutorio_helpers = require("sutorio.helpers")
 local lspconfig = require("lspconfig")
 local lsp_defaults = lspconfig.util.default_config
+local lspkind = require("lspkind")
 local luasnip = require("luasnip")
 -- }}}
 -- =============================================================================
@@ -128,9 +129,10 @@ local cmp = require("cmp")
 
 cmp.setup({
   sources = {
+    { name = "copilot" },
     { name = "nvim_lsp" },
     { name = "luasnip" },
-    { name = "orgmode" },
+    -- { name = "orgmode" },
     { name = "buffer" },
     { name = "path" },
   },
@@ -145,6 +147,13 @@ cmp.setup({
     expand = function(args)
       luasnip.lsp_expand(args.body)
     end,
+  },
+  formatting = {
+    format = lspkind.cmp_format({
+      mode = "symbol",
+      max_width = 50,
+      symbol_map = { Copilor = "" },
+    }),
   },
 })
 -- }}}
@@ -287,6 +296,7 @@ local SetupCopilot = function()
   --       is gonna make NVim hang to fuck.
   --       See: https://github.com/zbirenbaum/copilot.lua
   require("copilot").setup()
+  require("copilot_cmp").setup()
 end
 -- }}}
 -- =============================================================================

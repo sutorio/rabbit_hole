@@ -27,5 +27,17 @@ require("nvim-treesitter.configs").setup({
 
 -- Add an additional grammar for Justfiles
 require("tree-sitter-just").setup({})
-
+-- REVIEW: not sure if this is super annoying or not: it stickies the current
+-- head of the context in a file, eg the current function. Rust in particular
+-- benefits a little bit from this, as functions can be quite long.
 require("treesitter-context").setup({})
+
+-- use TreeSitter to handle where code can be folded:
+vim.opt.foldmethod = "expr"
+vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
+-- By default this means files will open with the code folded; don't want that.
+vim.api.nvim_create_autocmd({ "BufWinEnter" }, {
+  pattern = "*",
+  command = "normal zR",
+  desc = "default to open folds on new buffers/files",
+})

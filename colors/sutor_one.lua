@@ -70,7 +70,7 @@ local groups = {
 -- stylua: ignore start
 local editor_syntax = {
     ColorColumn          = { bg = p.blueGray3 },
-    -- Cursor         = {},
+    -- Cursor               = { fg = p.white },
     CursorLine           = { bg = p.background1 },
     CursorLineNr         = { fg = p.text },
     DarkenedPanel        = { bg = groups.panel },
@@ -421,7 +421,7 @@ local noice_groups = {
   -- NoiceCompletionItemWord = {}, -- (Normal for the popupmenu; defaults to NoiceCompletionItemWord)
   -- NoiceConfirm = {}, -- (Normal for the confirm view; defaults to NoiceConfirm)
   -- NoiceConfirmBorder = {}, -- (Border for the confirm view; defaults to NoiceConfirmBorder)
-  -- NoiceCursor = {}, -- (Fake Cursor; defaults to NoiceCursor)
+  NoiceCursor = { bg = p.white, fg = p.background3 }, -- (Fake Cursor; defaults to NoiceCursor)
   -- NoiceFormatConfirm = {}, -- (defaults to NoiceFormatConfirm)
   -- NoiceFormatConfirmDefault = {}, -- (defaults to NoiceFormatConfirmDefault)
   -- NoiceFormatDate = {}, -- (defaults to NoiceFormatDate)

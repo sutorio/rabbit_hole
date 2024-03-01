@@ -45,7 +45,13 @@ vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv")
 -- stylua: ignore start
 require("sutorio.helpers").lmap({
     -- -------------------------------------------------------------------------
-    -- Text-editing-related tasks
+    -- B is for buffer-related tasks
+    -- -------------------------------------------------------------------------
+    -- "update" rather than "write"; "update" only updates if the file has changed;
+    -- "write" will update regardless (will act like 'touch' and update the timestamp).
+    ["w"]  = { mode = "n", rhs = "<Cmd>update<Cr>", desc = "save current file" },
+    -- -------------------------------------------------------------------------
+    -- E is for text-editing-related tasks
     -- -------------------------------------------------------------------------
     -- When you paste *over* other text, Vim replaces the buffer with the replaced text.
     -- This is really annoying most of the time! So `<leader>p` will do what is expected (keep original text in-buffer).

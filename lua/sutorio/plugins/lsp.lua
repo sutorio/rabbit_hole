@@ -28,4 +28,7 @@ return {
   -- Copilot support. Note that the server does take time to start up,
   -- so it's important to lazy load it (in this case, on explicit command).
   { "zbirenbaum/copilot.lua", cmd = "Copilot", event = "InsertEnter" },
+  { "zbirenbaum/copilot-cmp" },
+  -- Icons for completion popups
+  { "onsails/lspkind.nvim" },
 }
