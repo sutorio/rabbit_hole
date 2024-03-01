@@ -45,6 +45,13 @@ local p = {
   text = "#E4F0FB",
   white = "#FFFFFF",
   none = "NONE",
+  -- highlight colours for grabbing visual attention
+  attention_red = "#FF0000",
+  attention_orange = "#FFA500",
+  attention_yellow = "#FFFF00",
+  attention_green = "#00FF00",
+  attention_blue = "#0000FF",
+  attention_purple = "#800080",
 }
 
 -- Semantic naming for palette colours.
@@ -497,12 +504,21 @@ end
 -- =============================================================================
 -- see
 local mini_groups = {
+  -- mini.statusline
   MiniStatuslineModeNormal = { bg = p.blue2, fg = p.background3 },
   MiniStatuslineModeInsert = { bg = p.teal1, fg = p.background3 },
   MiniStatuslineModeVisual = { bg = p.purple1, fg = p.background3 },
   MiniStatuslineModeReplace = { bg = p.pink2, fg = p.background3 },
   MiniStatuslineModeCommand = { bg = p.pink3, fg = p.background3 },
   MiniStatuslineModeOther = { bg = p.yellow, fg = p.background3 },
+  -- mini.hipatterns
+  -- NOTE: these are *user-defined* in the mini.hipatterns setup function
+  MiniHipatternsImportant = { bg = p.attention_red, fg = p.background3 },
+  MiniHipatternsFixme = { bg = p.attention_orange, fg = p.background3 },
+  MiniHipatternsTodo = { bg = p.attention_yellow, fg = p.background3 },
+  MiniHipatternsReview = { bg = p.attention_purple, fg = p.white },
+  MiniHipatternsHack = { bg = p.attention_blue, fg = p.white },
+  MiniHipatternsNote = { bg = p.attention_green, fg = p.background3 },
 }
 
 for group, styles in pairs(mini_groups) do

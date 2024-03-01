@@ -4,7 +4,7 @@
 --
 -- Although it's not at all required, I do like having a nice start screen with
 -- information about what I should be doing. `mini-starter` is used for this.
--- It also cycles through the list of oblique strategies, printing them at the 
+-- It also cycles through the list of oblique strategies, printing them at the
 -- bottom of the page.
 --
 -- Again, not at all required, but having a statusline with useful info that
@@ -15,6 +15,7 @@
 local starter = require("mini.starter")
 local statusline = require("mini.statusline")
 local comment = require("mini.comment")
+local highlight_patterns = require("mini.hipatterns")
 -- }}}
 -- =============================================================================
 -- {{{ mini-starter configs
@@ -246,5 +247,24 @@ statusline.setup()
 -- {{{ mini.comment
 -- =============================================================================
 comment.setup()
+-- }}}
+-- =============================================================================
+-- {{{  mini.highlight
+-- =============================================================================
+highlight_patterns.setup({
+  -- stylua: ignore
+  highlighters = {
+    important = { pattern = '%f[%w]()IMPORTANT()%f[%W]', group = 'MiniHipatternsImportant' },
+    fixme     = { pattern = '%f[%w]()FIXME()%f[%W]',     group = 'MiniHipatternsFixme' },
+    todo      = { pattern = '%f[%w]()TODO()%f[%W]',      group = 'MiniHipatternsTodo' },
+    review    = { pattern = '%f[%w]()REVIEW()%f[%W]',    group = 'MiniHipatternsReview' },
+    hack      = { pattern = '%f[%w]()HACK()%f[%W]',      group = 'MiniHipatternsHack' },
+    note      = { pattern = '%f[%w]()NOTE()%f[%W]',      group = 'MiniHipatternsNote' },
+
+    -- NOTE: this will highlight anything. It also provides colour highlighting
+    -- for hex colour strings (`#rrggbb`) out-of-the-box, like so:
+    -- hex_color = hipatterns.gen_highlighter.hex_color(),
+  },
+})
 -- }}}
 -- =============================================================================
