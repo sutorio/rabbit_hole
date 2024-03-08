@@ -71,6 +71,21 @@ local lua_ls_custom_config = function()
   })
 end
 
+local tailwindcss_custom_config = function()
+  lspconfig.tailwindcss.setup({
+    root_dir = lspconfig.util.root_pattern("tailwind.config.js"),
+    settings = {
+      tailwindCSS = {
+        experimental = {
+          -- class variance authority support: see https://cva.style/docs/getting-started/installation
+          { "cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]" },
+          { "cx\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)" },
+        },
+      },
+    },
+  })
+end
+
 local tsserver_custom_config = function()
   lspconfig.tsserver.setup({
     root_dir = lspconfig.util.root_pattern("package.json", "tsconfig.json"),
@@ -79,23 +94,25 @@ local tsserver_custom_config = function()
 end
 
 local vale_ls_custom_config = function()
-    lspconfig.vale_ls.setup({
-        root_dir = lspconfig.util.root_pattern(".vale.ini")
-    })
+  lspconfig.vale_ls.setup({
+    root_dir = lspconfig.util.root_pattern(".vale.ini"),
+  })
 end
 -- =============================================================================
 -- {{{ Formatters
 -- =============================================================================
--- `conform.nvim` frovides the formatting infra. 
+-- `conform.nvim` frovides the formatting infra.
 -- NOTE: Conform is used simply because it's much easier to set up than anything
 -- else with regards to defaulting back to the formatting implementation included
 -- in the given LSP.
 require("conform").setup({
   formatters_by_ft = {
-    css = { "prettierd" },
+    css = { "prettier" },
     lua = { "stylua" },
-    javascript = { "prettierd" },
-    typescript = {  "prettierd" },
+    javascript = { "prettier" },
+    javascriptreact = { "prettier" },
+    typescript = { "prettier" },
+    typescriptreact = { "prettier" },
     markdown = { "deno_fmt" },
     json = { "deno_fmt" },
     jsonc = { "deno_fmt" },
@@ -109,16 +126,15 @@ require("conform").setup({
 local lint = require("lint")
 
 lint.linters_by_ft = {
-    javascript = { "eslint" },
-    javascriptreact = { "eslint" },
-    ["javascript.jsx"] = { "eslint" },
-    typescript = { "eslint" },
-    typescriptreact = { "eslint" },
-    ["typescript.tsx"] = { "eslint" },
+  javascript = { "eslint" },
+  javascriptreact = { "eslint" },
+  ["javascript.jsx"] = { "eslint" },
+  typescript = { "eslint" },
+  typescriptreact = { "eslint" },
+  ["typescript.tsx"] = { "eslint" },
 
-    -- markdown = { "vale" },
+  -- markdown = { "vale" },
 }
-
 
 -- }}}
 -- =============================================================================
@@ -281,7 +297,8 @@ local SetupLuaSnip = function()
   -- speaking, necessary (LuaSnip will locate the VSCode-style snippets by
   -- default). But it allows other loaders to be added that point to this
   -- directory without much fuss.
-  local snippets_fpath = sutorio_helpers.path_join(vim.fn.stdpath("config"), "snippets")
+  local snippets_fpath =
+    sutorio_helpers.path_join(vim.fn.stdpath("config"), "snippets")
 
   require("luasnip.loaders.from_vscode").load({ paths = snippets_fpath })
 end
@@ -359,7 +376,8 @@ require("mason-lspconfig").setup({
     "ruby_ls",
     "rust_analyzer",
     "tsserver",
-    "vale_ls",
+    "tailwindcss",
+    -- "vale_ls",
   },
   handlers = {
     default_setup,
@@ -367,8 +385,9 @@ require("mason-lspconfig").setup({
     emmet_ls = emmet_ls_custom_config,
     jsonls = jsonls_custom_config,
     lua_ls = lua_ls_custom_config,
+    tailwindcss = tailwindcss_custom_config,
     tsserver = tsserver_custom_config,
-    vale_ls = vale_ls_custom_config,
+    -- vale_ls = vale_ls_custom_config,
   },
 })
 -- }}}
