@@ -73,3 +73,5 @@ vim.opt.updatetime = 50
 vim.opt.colorcolumn = "80"
 -- Hate them characters used to fill statusline/vertical space; just setting blank spaces instead.
 vim.opt.fillchars = "vert: ,fold: ,diff: ,stl: ,stlnc: "
+-- Whack the fold level right up on start to ensure folds are open when a file is opened
+vim.opt.foldlevelstart = 99

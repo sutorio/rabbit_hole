@@ -145,12 +145,12 @@ local cmp = require("cmp")
 
 cmp.setup({
   sources = {
-    { name = "copilot" },
-    { name = "nvim_lsp" },
-    { name = "luasnip" },
+    { name = "copilot", group_index = 2 },
+    { name = "nvim_lsp", group_index = 2 },
+    { name = "luasnip", group_index = 2 },
     -- { name = "orgmode" },
-    { name = "buffer" },
-    { name = "path" },
+    { name = "buffer", group_index = 2 },
+    { name = "path", group_index = 2 },
   },
   mapping = cmp.mapping.preset.insert({
     -- Enter key confirms completion item
@@ -168,7 +168,7 @@ cmp.setup({
     format = lspkind.cmp_format({
       mode = "symbol",
       max_width = 50,
-      symbol_map = { Copilor = "" },
+      symbol_map = { Copilot = "" },
     }),
   },
 })
@@ -312,7 +312,10 @@ local SetupCopilot = function()
   --       The server takes a while to start, so just setting up straightaway
   --       is gonna make NVim hang to fuck.
   --       See: https://github.com/zbirenbaum/copilot.lua
-  require("copilot").setup()
+  require("copilot").setup({
+    suggestion = { enabled = false },
+    panel = { enabled = false },
+  })
   require("copilot_cmp").setup()
 end
 -- }}}
