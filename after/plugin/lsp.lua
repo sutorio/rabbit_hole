@@ -57,6 +57,12 @@ local lua_ls_custom_config = function()
           -- The Lua language server is being used for Neovim stuff,
           -- globals listed relate to Neovim development.
           globals = { "vim" },
+          -- REVIEW: this is to suppress the "missing parameters" warning that
+          --         often crops up for `setup` options for plugins in particular.
+          --         This is not necessarily a good idea: the warning is caused
+          --         by plugins {mis|over}specifying the types for option tables.
+          --         **IT MAY CAUSE FALSE NEGATIVES, WHEN I HAVE MADE AN ERROR**
+          disable = {"missing-parameters", "missing-fields"},
         },
         workspace = {
           -- Make the server aware of Neovim runtime files
@@ -376,7 +382,6 @@ require("mason-lspconfig").setup({
     "html",
     "jsonls",
     "lua_ls",
-    "ruby_ls",
     "rust_analyzer",
     "tsserver",
     "tailwindcss",

@@ -36,7 +36,7 @@ require("treesitter-context").setup({})
 vim.opt.foldmethod = "expr"
 vim.opt.foldexpr = "nvim_treesitter#foldexpr()"
 -- By default this means files will open with the code folded; don't want that.
-vim.api.nvim_create_autocmd({ "BufWinEnter" }, {
+vim.api.nvim_create_autocmd({ "BufEnter" }, {
   pattern = "*",
   command = "normal zR",
   desc = "default to open folds on new buffers/files",
