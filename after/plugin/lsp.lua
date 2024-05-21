@@ -79,7 +79,7 @@ end
 
 local tailwindcss_custom_config = function()
   lspconfig.tailwindcss.setup({
-    root_dir = lspconfig.util.root_pattern("tailwind.config.js"),
+    root_dir = lspconfig.util.root_pattern("tailwind.config.[mc]?js"),
     settings = {
       tailwindCSS = {
         experimental = {
@@ -115,13 +115,13 @@ require("conform").setup({
   formatters_by_ft = {
     css = { "prettier" },
     lua = { "stylua" },
-    javascript = { "prettier" },
-    javascriptreact = { "prettier" },
-    typescript = { "prettier" },
-    typescriptreact = { "prettier" },
-    markdown = { "deno_fmt" },
-    json = { "deno_fmt" },
-    jsonc = { "deno_fmt" },
+    javascript = { { "deno_fmt", "prettier" } },
+    javascriptreact = { { "deno_fmt", "prettier"  } },
+    typescript = { { "deno_fmt", "prettier" } },
+    typescriptreact = { { "deno_fmt", "prettier" } },
+    markdown = { { "deno_fmt", "prettier" } },
+    json = { { "deno_fmt", "prettier" } },
+    jsonc = { { "deno_fmt", "prettier" } },
     ruby = { "rubyfmt" },
   },
 })
