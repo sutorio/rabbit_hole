@@ -211,7 +211,7 @@ local render_oblique_strategy = (function()
     0,
     5000,
     vim.schedule_wrap(function()
-      if vim.api.nvim_buf_get_option(0, "filetype") ~= "starter" then
+      if vim.api.nvim_get_option_value("filetype", { buf = 0}) ~= "starter" then
         timer:stop()
         return
       end

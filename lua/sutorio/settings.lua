@@ -5,16 +5,11 @@ vim.g.mapleader = " "
 -- Add filetypes that are not currently being recognised
 vim.filetype.add({
   extension = {
-    -- Nunjucks templates
-    njk = "html",
-    -- Embedded Ruby templates (erb)
-    erb = "html",
     -- .aliases and .profiles files
     aliases = "bash",
     profiles = "bash",
   },
   pattern = {
-    ["bash"] = "bash",
     ["justfile/i"] = "just",
   },
 })

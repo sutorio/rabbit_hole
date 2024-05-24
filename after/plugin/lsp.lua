@@ -4,46 +4,32 @@
 -- =============================================================================
 -- {{{ Aliases
 -- =============================================================================
-local sutorio_helpers = require("sutorio.helpers")
 local lspconfig = require("lspconfig")
 local lsp_defaults = lspconfig.util.default_config
-local lspkind = require("lspkind")
-local luasnip = require("luasnip")
 -- }}}
 -- =============================================================================
 -- {{{ LSP server custom rules (overrides defaults)
 -- =============================================================================
-local deno_ls_custom_config = function()
-  lspconfig.denols.setup({
+local servers = {
+  bashls = {},
+  cssls = {},
+  denols = {
     root_dir = lspconfig.util.root_pattern("deno.json", "deno.jsonc"),
-  })
-end
-
-local emmet_ls_custom_config = function()
-  lspconfig.emmet_ls.setup({
+  },
+  emmet_ls = {
     -- The Emmet language server requires hints re. which extensions it
     -- should provide completions for. I only care about HTML/HTML templating
-    filetypes = {
-      "html",
-      "heex",
-      "eex",
-      "njk",
-    },
-  })
-end
-
-local jsonls_custom_config = function()
-  lspconfig.jsonls.setup({
+    filetypes = { "html", "heex", "eex", "njk", "astro" },
+  },
+  jsonls = {
     settings = {
       json = {
         schemas = require("schemastore").json.schemas(),
+        validate = { enable = true },
       },
     },
-  })
-end
-
-local lua_ls_custom_config = function()
-  lspconfig.lua_ls.setup({
+  },
+  lua_ls = {
     settings = {
       Lua = {
         runtime = {
@@ -62,7 +48,7 @@ local lua_ls_custom_config = function()
           --         This is not necessarily a good idea: the warning is caused
           --         by plugins {mis|over}specifying the types for option tables.
           --         **IT MAY CAUSE FALSE NEGATIVES, WHEN I HAVE MADE AN ERROR**
-          disable = {"missing-parameters", "missing-fields"},
+          disable = { "missing-parameters", "missing-fields" },
         },
         workspace = {
           -- Make the server aware of Neovim runtime files
@@ -74,11 +60,9 @@ local lua_ls_custom_config = function()
         telemetry = { enable = false },
       },
     },
-  })
-end
-
-local tailwindcss_custom_config = function()
-  lspconfig.tailwindcss.setup({
+  },
+  rust_analyzer = {},
+  tailwindcss = {
     root_dir = lspconfig.util.root_pattern("tailwind.config.[mc]?js"),
     settings = {
       tailwindCSS = {
@@ -89,121 +73,84 @@ local tailwindcss_custom_config = function()
         },
       },
     },
-  })
-end
+    -- Probably want to disable formatting for this lang server
+    tsserver = {
+      root_dir = lspconfig.util.root_pattern(
+        "package.json",
+        "tsconfig.json",
+        "jsconfig.json"
+      ),
+      single_file_support = false,
+    },
+    yamlls = {
+      settings = {
+        yaml = {
+          schemaStore = {
+            enable = false,
+            url = "",
+          },
+          schemas = require("schemastore").yaml.schemas(),
+        },
+      },
+    },
+  },
+}
 
-local tsserver_custom_config = function()
-  lspconfig.tsserver.setup({
-    root_dir = lspconfig.util.root_pattern("package.json", "tsconfig.json"),
-    single_file_support = false,
-  })
-end
-
-local vale_ls_custom_config = function()
-  lspconfig.vale_ls.setup({
-    root_dir = lspconfig.util.root_pattern(".vale.ini"),
-  })
-end
 -- =============================================================================
 -- {{{ Formatters
 -- =============================================================================
--- `conform.nvim` frovides the formatting infra.
+-- `conform.nvim` provides the formatting infra.
 -- NOTE: Conform is used simply because it's much easier to set up than anything
 -- else with regards to defaulting back to the formatting implementation included
 -- in the given LSP.
 require("conform").setup({
   formatters_by_ft = {
-    css = { "prettier" },
     lua = { "stylua" },
-    javascript = { { "deno_fmt", "prettier" } },
-    javascriptreact = { { "deno_fmt", "prettier"  } },
-    typescript = { { "deno_fmt", "prettier" } },
-    typescriptreact = { { "deno_fmt", "prettier" } },
-    markdown = { { "deno_fmt", "prettier" } },
-    json = { { "deno_fmt", "prettier" } },
-    jsonc = { { "deno_fmt", "prettier" } },
     ruby = { "rubyfmt" },
   },
 })
+
+local InitFormatting = function()
+  local callback = function(args)
+    require("conform").format({
+      bufnr = args.buf,
+      lsp_fallback = true,
+      quiet = true,
+    })
+  end
+
+  vim.api.nvim_create_autocmd("BufWritePre", { callback = callback })
+
+  vim.keymap.set("n", "<leader>ef", callback, { desc = "format document" })
+end
 -- }}}
 -- =============================================================================
 -- {{{ Linters
 -- =============================================================================
-local lint = require("lint")
-
-lint.linters_by_ft = {
-  javascript = { "eslint" },
-  javascriptreact = { "eslint" },
-  ["javascript.jsx"] = { "eslint" },
-  typescript = { "eslint" },
-  typescriptreact = { "eslint" },
-  ["typescript.tsx"] = { "eslint" },
-
-  -- markdown = { "vale" },
-}
+-- local lint = require("lint")
+--
+-- lint.linters_by_ft = {
+--   javascript = { "eslint" },
+--   javascriptreact = { "eslint" },
+--   ["javascript.jsx"] = { "eslint" },
+--   typescript = { "eslint" },
+--   typescriptreact = { "eslint" },
+--   ["typescript.tsx"] = { "eslint" },
+-- }
 
 -- }}}
 -- =============================================================================
--- =============================================================================
--- {{{ Completions setup
--- =============================================================================
-local cmp = require("cmp")
-
-cmp.setup({
-  sources = {
-    { name = "copilot", group_index = 2 },
-    { name = "nvim_lsp", group_index = 2 },
-    { name = "luasnip", group_index = 2 },
-    -- { name = "orgmode" },
-    { name = "buffer", group_index = 2 },
-    { name = "path", group_index = 2 },
-  },
-  mapping = cmp.mapping.preset.insert({
-    -- Enter key confirms completion item
-    ["<CR>"] = cmp.mapping.confirm({ select = false }),
-
-    -- Ctrl + space triggers completion menu
-    ["<C-Space>"] = cmp.mapping.complete(),
-  }),
-  snippet = {
-    expand = function(args)
-      luasnip.lsp_expand(args.body)
-    end,
-  },
-  formatting = {
-    format = lspkind.cmp_format({
-      mode = "symbol",
-      max_width = 50,
-      symbol_map = { Copilot = "" },
-    }),
-  },
-})
--- }}}
 -- =============================================================================
 -- {{{ LSP: config functions
 -- =============================================================================
 local InitDiagnosticsUi = function()
-  local diagnostics = {
+  local diagnosticsIcons = {
     Error = "",
     Hint = "",
     Information = "",
     Question = "",
     Warning = "",
   }
-
-  local signs = {
-    { name = "DiagnosticSignError", text = diagnostics.Error },
-    { name = "DiagnosticSignWarn", text = diagnostics.Warning },
-    { name = "DiagnosticSignHint", text = diagnostics.Hint },
-    { name = "DiagnosticSignInfo", text = diagnostics.Info },
-  }
-
-  for _, sign in ipairs(signs) do
-    vim.fn.sign_define(
-      sign.name,
-      { texthl = sign.name, text = sign.text, numhl = sign.name }
-    )
-  end
 
   -- LSP handlers configuration
   local config = {
@@ -217,7 +164,28 @@ local InitDiagnosticsUi = function()
       -- virtual_text = { severity = vim.diagnostic.severity.ERROR },
       virtual_text = false,
       signs = {
-        active = signs,
+        active = {
+          {
+            texthl = "DiagnosticSignError",
+            text = diagnosticsIcons.Error,
+            numhl = "DiagnosticSignError",
+          },
+          {
+            texthl = "DiagnosticSignWarn",
+            text = diagnosticsIcons.Warning,
+            numhl = "DiagnosticSignWarn",
+          },
+          {
+            texthl = "DiagnosticSignHint",
+            text = diagnosticsIcons.Hint,
+            numhl = "DiagnosticSignHint",
+          },
+          {
+            texthl = "DiagnosticSignInfo",
+            text = diagnosticsIcons.Info,
+            numhl = "DiagnosticSignInfo",
+          },
+        },
       },
       underline = true,
       update_in_insert = false,
@@ -247,82 +215,12 @@ local InitDiagnosticsUi = function()
   -- vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, config.float)
 end
 
-local InitHighlighting = function(client, bufnr)
-  if client.server_capabilities.documentHighlightProvider then
-    -- Set up an augroup for LSP highlighting...
-    local lsp_highlight_grp =
-      vim.api.nvim_create_augroup("LspDocumentHighlight", { clear = true })
-
-    -- ...then apply
-    vim.api.nvim_create_autocmd("CursorHold", {
-      callback = function()
-        vim.schedule(vim.lsp.buf.document_highlight)
-      end,
-      group = lsp_highlight_grp,
-      buffer = bufnr,
-    })
-    vim.api.nvim_create_autocmd("CursorMoved", {
-      callback = function()
-        vim.schedule(vim.lsp.buf.clear_references)
-      end,
-      group = lsp_highlight_grp,
-      buffer = bufnr,
-    })
-  end
-end
-
-local InitLinting = function(client)
+local InitLinting = function()
   vim.api.nvim_create_autocmd({ "BufWritePost" }, {
     callback = function()
       require("lint").try_lint()
     end,
   })
-end
-
-local InitFormatting = function(client)
-  -- NOTE: I give up. The built in formatting works...sometimes. Most of the time
-  -- it's an ultra-frustrating garbage fire.
-  client.server_capabilities.document_formatting = true
-  client.server_capabilities.document_range_formatting = true
-
-  vim.keymap.set("n", "<leader>ef", function()
-    require("conform").format({ lsp_fallback = true })
-  end, { desc = "format document" })
-end
--- }}}
--- =============================================================================
--- {{{ Snippets setup
-local SetupLuaSnip = function()
-  luasnip.setup({
-    history = true,
-    updateevents = "TextChanged, TextChangedI",
-    enable_autosnippets = true,
-  })
-  -- For VSCode-style snippets, they need to live in a directory on the
-  -- runtime path, with a package.json manifest. So this is not, strictly
-  -- speaking, necessary (LuaSnip will locate the VSCode-style snippets by
-  -- default). But it allows other loaders to be added that point to this
-  -- directory without much fuss.
-  local snippets_fpath =
-    sutorio_helpers.path_join(vim.fn.stdpath("config"), "snippets")
-
-  require("luasnip.loaders.from_vscode").load({ paths = snippets_fpath })
-end
-
--- }}}
--- =============================================================================
--- {{{ Copilot setup
--- =============================================================================
-local SetupCopilot = function()
-  -- TODO: tweak this. In particular, I want copilot to start/stop on-demand.
-  --       The server takes a while to start, so just setting up straightaway
-  --       is gonna make NVim hang to fuck.
-  --       See: https://github.com/zbirenbaum/copilot.lua
-  require("copilot").setup({
-    suggestion = { enabled = false },
-    panel = { enabled = false },
-  })
-  require("copilot_cmp").setup()
 end
 -- }}}
 -- =============================================================================
@@ -330,8 +228,6 @@ end
 -- =============================================================================
 
 InitDiagnosticsUi()
-SetupLuaSnip()
-SetupCopilot()
 
 lsp_defaults.capabilities = vim.tbl_deep_extend(
   "force",
@@ -344,8 +240,6 @@ vim.api.nvim_create_autocmd("LspAttach", {
   callback = function(event)
     local buffer = event.buf
     local client = vim.lsp.get_client_by_id(event.data.client_id)
-
-    local opts = { buffer = buffer }
 
     -- stylua: ignore start
     vim.keymap.set("n", "K",    vim.lsp.buf.hover,           { buffer = buffer, desc = "hover info" })
@@ -362,9 +256,8 @@ vim.api.nvim_create_autocmd("LspAttach", {
     vim.keymap.set("n", "]d",   vim.diagnostic.goto_next,    { buffer = buffer, desc = "go to previous" })
     -- stylua: ignore end
 
-    InitHighlighting(client, buffer)
-    InitFormatting(client)
-    InitLinting(client)
+    InitFormatting()
+    InitLinting()
   end,
 })
 
@@ -372,31 +265,19 @@ local default_setup = function(server)
   lspconfig[server].setup({})
 end
 
+local mason_config = { ensure_installed = {}, handlers = { default_setup } }
+
+for name, config in pairs(servers) do
+  table.insert(mason_config.ensure_installed, name)
+  mason_config.handlers[name] = function()
+    lspconfig[name].setup(config)
+  end
+end
+
 require("mason").setup({})
-require("mason-lspconfig").setup({
-  ensure_installed = {
-    "cssls",
-    "denols",
-    "emmet_ls",
-    "eslint",
-    "html",
-    "jsonls",
-    "lua_ls",
-    "rust_analyzer",
-    "tsserver",
-    "tailwindcss",
-    -- "vale_ls",
-  },
-  handlers = {
-    default_setup,
-    denols = deno_ls_custom_config,
-    emmet_ls = emmet_ls_custom_config,
-    jsonls = jsonls_custom_config,
-    lua_ls = lua_ls_custom_config,
-    tailwindcss = tailwindcss_custom_config,
-    tsserver = tsserver_custom_config,
-    -- vale_ls = vale_ls_custom_config,
-  },
-})
+require("mason-lspconfig").setup(mason_config)
+
+InitLinting()
+InitFormatting()
 -- }}}
 -- =============================================================================
