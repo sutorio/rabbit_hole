@@ -210,9 +210,11 @@ local InitDiagnosticsUi = function()
   })
 
   vim.diagnostic.config(config.diagnostic)
-  -- NOTE: this is being handled by noice.nvim
-  -- vim.lsp.handlers["textDocument/hover"] = vim.lsp.with(vim.lsp.handlers.hover, config.float)
-  -- vim.lsp.handlers["textDocument/signatureHelp"] = vim.lsp.with(vim.lsp.handlers.signature_help, config.float)
+  -- REVIEW: this was being handled by noice.nvim
+  vim.lsp.handlers["textDocument/hover"] =
+    vim.lsp.with(vim.lsp.handlers.hover, config.float)
+  vim.lsp.handlers["textDocument/signatureHelp"] =
+    vim.lsp.with(vim.lsp.handlers.signature_help, config.float)
 end
 
 local InitLinting = function()
