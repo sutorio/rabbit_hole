@@ -111,9 +111,8 @@ require("conform").setup({
 })
 
 local InitFormatting = function()
-  local callback = function(args)
+  local callback = function()
     require("conform").format({
-      bufnr = args.buf,
       lsp_fallback = true,
       quiet = true,
     })
@@ -257,9 +256,6 @@ vim.api.nvim_create_autocmd("LspAttach", {
     vim.keymap.set("n", "[d",   vim.diagnostic.goto_prev,    { buffer = buffer, desc = "go to next" })
     vim.keymap.set("n", "]d",   vim.diagnostic.goto_next,    { buffer = buffer, desc = "go to previous" })
     -- stylua: ignore end
-
-    InitFormatting()
-    InitLinting()
   end,
 })
 

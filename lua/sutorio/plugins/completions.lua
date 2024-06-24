@@ -14,9 +14,8 @@ return {
       "saadparwaiz1/cmp_luasnip",
       -- Always had issues with SQL stuff in NVim, so testing out dadbod:
       "kristijanhusak/vim-dadbod-completion",
-      -- Copilot support. Note that the server does take time to start up,
-      -- so it's important to lazy load it (in this case, on explicit command).
-      { "zbirenbaum/copilot.lua", cmd = "Copilot", event = "InsertEnter" },
+      -- REVIEW: testing out Supermaven rather than Copilot
+      { "supermaven-inc/supermaven-nvim" },
       -- TODO: THIS IS THROWING ERRORS "zbirenbaum/copilot-cmp",
       -- Icons for completion popups
       "onsails/lspkind.nvim",

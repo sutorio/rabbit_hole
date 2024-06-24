@@ -69,4 +69,7 @@ vim.opt.colorcolumn = "80"
 -- Hate them characters used to fill statusline/vertical space; just setting blank spaces instead.
 vim.opt.fillchars = "vert: ,fold: ,diff: ,stl: ,stlnc: "
 -- Whack the fold level right up on start to ensure folds are open when a file is opened
-vim.opt.foldlevelstart = 99
+-- vim.opt.foldlevelstart = 99
+
+-- Ensure the option for exrc is ON, so that project-local settings can be loaded
+vim.opt.exrc = true

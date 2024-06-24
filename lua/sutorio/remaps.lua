@@ -67,7 +67,8 @@ require("sutorio.helpers").lmap({
     -- -------------------------------------------------------------------------
     -- Neovim-specific/inbuilt system-related tasks
     -- -------------------------------------------------------------------------
-    ["n/"] = { mode = "n", rhs = vim.cmd.Ex, desc = "open netrw" },
+    -- REVIEW: testing Oil.nvim (https://github.com/stevearc/oil.nvim), so disable the netrw stuff for now.
+    -- ["n/"] = { mode = "n", rhs = vim.cmd.Ex, desc = "open netrw" },
     ["ns"] = { mode = "n", rhs = "<Cmd>so<Cr>", desc = "source current file" },
     ["nx"] = { mode = "n", rhs = "<Cmd>!chmod +x %<CR>", desc = "chmod +x the current file", opts = { silent = true }},
     -- -------------------------------------------------------------------------

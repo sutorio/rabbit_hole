@@ -20,7 +20,7 @@ vim.opt.shortmess:append("c")
 -- =============================================================================
 cmp.setup({
   sources = {
-    { name = "copilot" },
+    { name = "supermaven" },
     { name = "nvim_lsp" },
     { name = "luasnip" },
     { name = "buffer" },
@@ -41,7 +41,9 @@ cmp.setup({
     format = lspkind.cmp_format({
       mode = "symbol",
       max_width = 50,
-      symbol_map = { Copilot = "" },
+      symbol_map = {
+        Supermaven = "",
+      },
     }),
   },
 })
@@ -75,15 +77,17 @@ require("luasnip.loaders.from_vscode").load({ paths = snippets_fpath })
 
 -- }}}
 -- =============================================================================
--- {{{ Copilot setup
+-- {{{ Supermaven AI completion
 -- =============================================================================
--- TODO: tweak this. In particular, I want copilot to start/stop on-demand.
---       The server takes a while to start, so just setting up straightaway
---       is gonna make NVim hang to fuck.
---       See: https://github.com/zbirenbaum/copilot.lua
-require("copilot").setup({
-  suggestion = { enabled = false },
-  panel = { enabled = false },
+require("supermaven-nvim").setup({})
+
+require("sutorio.helpers").lmap({
+  ["ts"] = {
+    mode = "n",
+    rhs = "<Cmd>SupermavenToggle<Cr>",
+    desc = "toggle Supermaven AI completion",
+    opts = { silent = true },
+  },
 })
 -- }}}
 -- =============================================================================
