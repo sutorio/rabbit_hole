@@ -11,6 +11,7 @@ local lsp_defaults = lspconfig.util.default_config
 -- {{{ LSP server custom rules (overrides defaults)
 -- =============================================================================
 local servers = {
+  astro = {},
   bashls = {},
   cssls = {},
   denols = {
@@ -107,6 +108,7 @@ require("conform").setup({
   formatters_by_ft = {
     lua = { "stylua" },
     ruby = { "rubyfmt" },
+    json = { "biomejs" },
   },
 })
 
@@ -126,16 +128,16 @@ end
 -- =============================================================================
 -- {{{ Linters
 -- =============================================================================
--- local lint = require("lint")
---
--- lint.linters_by_ft = {
---   javascript = { "eslint" },
---   javascriptreact = { "eslint" },
---   ["javascript.jsx"] = { "eslint" },
---   typescript = { "eslint" },
---   typescriptreact = { "eslint" },
---   ["typescript.tsx"] = { "eslint" },
--- }
+local lint = require("lint")
+
+lint.linters_by_ft = {
+  javascript = { "biomejs" },
+  javascriptreact = { "biomejs" },
+  ["javascript.jsx"] = { "biomejs" },
+  typescript = { "biomejs" },
+  typescriptreact = { "biomejs" },
+  ["typescript.tsx"] = { "biomejs" },
+}
 
 -- }}}
 -- =============================================================================

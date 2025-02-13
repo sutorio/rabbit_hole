@@ -1,7 +1,7 @@
 local sutorio_helpers = require("sutorio.helpers")
 
 -- Leader key is set prior to anything else.
-vim.g.mapleader = " "
+vim.g.mapleader = vim.keycode("<space>")
 -- Add filetypes that are not currently being recognised
 vim.filetype.add({
   extension = {
