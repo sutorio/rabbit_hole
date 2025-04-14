@@ -1,6 +1,6 @@
 require("nvim-treesitter.configs").setup({
   -- This takes a a list of parser names or "all".
-  -- Latter is used. but note this makes an inial cold startup (rare) slow,
+  -- REVIEW: Latter was used but note this can make an inial startup very slow,
   -- and makes `:checkhealth` (common) hang while each parser is checked.
   ensure_installed = {
     "astro",
@@ -88,7 +88,7 @@ require("nvim-treesitter.configs").setup({
 
   -- Automatically install missing parsers when entering buffer
   -- Recommendation: set to false if you don't have `tree-sitter` CLI installed locally
-  auto_install = true,
+  auto_install = false,
 
   highlight = {
     enable = true,
