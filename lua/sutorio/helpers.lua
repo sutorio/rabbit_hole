@@ -41,6 +41,21 @@ M.lmap = function(leader_mappings)
     vim.keymap.set(config.mode, lmap, config.rhs, options)
   end
 end
+
+-- Exactly the same as above, but without the leader - so e.g. for LSP mappings
+M.kmap = function(mappings)
+  for lhs, config in pairs(mappings) do
+    -- `desc` is part of the `opts` table passed to `keymap.set`
+    local options = { noremap = true, desc = config.desc }
+
+    if config.opts then
+      options = vim.tbl_extend("force", options, config.opts)
+    end
+
+    vim.keymap.set(config.mode, lhs, config.rhs, options)
+  end
+end
+
 -- }}}
 -- =============================================================================
 -- {{{ File path helpers
@@ -74,13 +89,13 @@ end
 ---@param ... string The paths to join.
 ---@return string
 M.path_join = function(...)
-  local args = {...}
+  local args = { ... }
   if #args == 0 then
     return ""
   end
 
   local all_parts = {}
-  if type(args[1]) =="string" and args[1]:sub(1, 1) == M.path_separator then
+  if type(args[1]) == "string" and args[1]:sub(1, 1) == M.path_separator then
     all_parts[1] = ""
   end
 

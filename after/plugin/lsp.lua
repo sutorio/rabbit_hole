@@ -6,6 +6,8 @@
 -- =============================================================================
 local lspconfig = require("lspconfig")
 local lsp_defaults = lspconfig.util.default_config
+local helpers = require("sutorio.helpers")
+local snacks = require("snacks")
 -- }}}
 -- =============================================================================
 -- {{{ LSP server custom rules (overrides defaults)
@@ -74,24 +76,24 @@ local servers = {
         },
       },
     },
-    -- Probably want to disable formatting for this lang server
-    tsserver = {
-      root_dir = lspconfig.util.root_pattern(
-        "package.json",
-        "tsconfig.json",
-        "jsconfig.json"
-      ),
-      single_file_support = false,
-    },
-    yamlls = {
-      settings = {
-        yaml = {
-          schemaStore = {
-            enable = false,
-            url = "",
-          },
-          schemas = require("schemastore").yaml.schemas(),
+  },
+  -- Probably want to disable formatting for this lang server
+  ts_ls = {
+    root_dir = lspconfig.util.root_pattern(
+      "package.json",
+      "tsconfig.json",
+      "jsconfig.json"
+    ),
+    single_file_support = false,
+  },
+  yamlls = {
+    settings = {
+      yaml = {
+        schemaStore = {
+          enable = false,
+          url = "",
         },
+        schemas = require("schemastore").yaml.schemas(),
       },
     },
   },
@@ -105,179 +107,299 @@ local servers = {
 -- else with regards to defaulting back to the formatting implementation included
 -- in the given LSP.
 require("conform").setup({
+  notify_on_error = false,
+  default_format_opts = {
+    lsp_format = "fallback",
+  },
+  format_on_save = function(bufnr)
+    -- Disable "format_on_save lsp_fallback" for languages that don't
+    -- have a well standardized coding style. You can add additional
+    -- languages here or re-enable it for the disabled ones.
+    local disable_filetypes = { c = true, cpp = true }
+    local lsp_format_opt
+
+    if disable_filetypes[vim.bo[bufnr].filetype] then
+      lsp_format_opt = "never"
+    else
+      lsp_format_opt = "fallback"
+    end
+
+    return {
+      timeout_ms = 500,
+      lsp_format = lsp_format_opt,
+    }
+  end,
   formatters_by_ft = {
     lua = { "stylua" },
-    ruby = { "rubyfmt" },
-    json = { "biomejs" },
+    javascript = {
+      "deno_fmt",
+      "biome",
+      "prettierd",
+      "prettier",
+      stop_after_first = true,
+    },
+    typescript = {
+      "deno_fmt",
+      "biome",
+      "prettierd",
+      "prettier",
+      stop_after_first = true,
+    },
+    typescriptreact = {
+      "deno_fmt",
+      "biome",
+      "prettierd",
+      "prettier",
+      stop_after_first = true,
+    },
+    rust = { "rustfmt" },
   },
 })
 
-local InitFormatting = function()
-  local callback = function()
-    require("conform").format({
-      lsp_fallback = true,
-      quiet = true,
-    })
-  end
-
-  vim.api.nvim_create_autocmd("BufWritePre", { callback = callback })
-
-  vim.keymap.set("n", "<leader>ef", callback, { desc = "format document" })
-end
--- }}}
--- =============================================================================
--- {{{ Linters
--- =============================================================================
-local lint = require("lint")
-
-lint.linters_by_ft = {
-  javascript = { "biomejs" },
-  javascriptreact = { "biomejs" },
-  ["javascript.jsx"] = { "biomejs" },
-  typescript = { "biomejs" },
-  typescriptreact = { "biomejs" },
-  ["typescript.tsx"] = { "biomejs" },
-}
-
--- }}}
--- =============================================================================
--- =============================================================================
--- {{{ LSP: config functions
--- =============================================================================
-local InitDiagnosticsUi = function()
-  local diagnosticsIcons = {
-    Error = "",
-    Hint = "",
-    Information = "",
-    Question = "",
-    Warning = "",
-  }
-
-  -- LSP handlers configuration
-  local config = {
-    float = {
-      focusable = true,
-      style = "minimal",
-      border = "rounded",
-    },
-
-    diagnostic = {
-      -- virtual_text = { severity = vim.diagnostic.severity.ERROR },
-      virtual_text = false,
-      signs = {
-        active = {
-          {
-            texthl = "DiagnosticSignError",
-            text = diagnosticsIcons.Error,
-            numhl = "DiagnosticSignError",
-          },
-          {
-            texthl = "DiagnosticSignWarn",
-            text = diagnosticsIcons.Warning,
-            numhl = "DiagnosticSignWarn",
-          },
-          {
-            texthl = "DiagnosticSignHint",
-            text = diagnosticsIcons.Hint,
-            numhl = "DiagnosticSignHint",
-          },
-          {
-            texthl = "DiagnosticSignInfo",
-            text = diagnosticsIcons.Info,
-            numhl = "DiagnosticSignInfo",
-          },
-        },
-      },
-      underline = true,
-      update_in_insert = false,
-      severity_sort = true,
-      float = {
-        focusable = true,
-        style = "minimal",
-        border = "rounded",
-        source = "always",
-        header = "",
-        prefix = "",
-      },
-    },
-  }
-
-  vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
-    pattern = "*",
-    callback = function()
-      vim.diagnostic.open_float(nil, { focus = false, scope = "cursor" })
+helpers.lmap({
+  ["ef"] = {
+    mode = "n",
+    rhs = function()
+      require("conform").format({ async = true, lsp_format = "fallback" })
     end,
-    desc = "Open a diagnostic popup under the cursor",
-  })
+    { desc = "[e]diting]: [f]ormat document" },
+  },
+})
 
-  vim.diagnostic.config(config.diagnostic)
-  -- REVIEW: this was being handled by noice.nvim
-  vim.lsp.handlers["textDocument/hover"] =
-    vim.lsp.with(vim.lsp.handlers.hover, config.float)
-  vim.lsp.handlers["textDocument/signatureHelp"] =
-    vim.lsp.with(vim.lsp.handlers.signature_help, config.float)
-end
-
-local InitLinting = function()
-  vim.api.nvim_create_autocmd({ "BufWritePost" }, {
-    callback = function()
-      require("lint").try_lint()
-    end,
-  })
-end
 -- }}}
 -- =============================================================================
--- {{{ LSP: finalise setup
+-- {{{ LSP Setup
 -- =============================================================================
+-- NOTE: This is taken from https://github.com/nvim-lua/kickstart.nvim
+--       including the following explanation:
+--
+-- Brief aside: **What is LSP?**
+--
+-- LSP is an initialism you've probably heard, but might not understand what it is.
+--
+-- LSP stands for Language Server Protocol. It's a protocol that helps editors
+-- and language tooling communicate in a standardized fashion.
+--
+-- In general, you have a "server" which is some tool built to understand a particular
+-- language (such as `gopls`, `lua_ls`, `rust_analyzer`, etc.). These Language Servers
+-- (sometimes called LSP servers, but that's kind of like ATM Machine) are standalone
+-- processes that communicate with some "client" - in this case, Neovim!
+--
+-- LSP provides Neovim with features like:
+--  - Go to definition
+--  - Find references
+--  - Autocompletion
+--  - Symbol Search
+--  - and more!
+--
+-- Thus, Language Servers are external tools that must be installed separately from
+-- Neovim. This is where `mason` and related plugins come into play.
+--
+-- If you're wondering about lsp vs treesitter, you can check out the wonderfully
+-- and elegantly composed help section, `:help lsp-vs-treesitter`
 
-InitDiagnosticsUi()
-
-lsp_defaults.capabilities = vim.tbl_deep_extend(
-  "force",
-  lsp_defaults.capabilities,
-  require("cmp_nvim_lsp").default_capabilities()
-)
-
+--  This function gets run when an LSP attaches to a particular buffer.
+--  That is to say, every time a new file is opened that is associated with
+--  an lsp (for example, opening `main.rs` is associated with `rust_analyzer`) this
+--  function will be executed to configure the current buffer
 vim.api.nvim_create_autocmd("LspAttach", {
-  desc = "LSP actions",
+  group = vim.api.nvim_create_augroup("LSP Actions", { clear = true }),
   callback = function(event)
-    local buffer = event.buf
-    local client = vim.lsp.get_client_by_id(event.data.client_id)
+    helpers.kmap({
+      ["K"] = {
+        mode = "n",
+        rhs = vim.lsp.buf.hover,
+        { buffer = event.buf, desc = "hover info" },
+      },
+      ["gd"] = {
+        mode = "n",
+        rhs = snacks.picker.lsp_definitions,
+        { buffer = event.buf, desc = "go to definition" },
+      },
+      ["gD"] = {
+        mode = "n",
+        rhs = snacks.picker.lsp_declarations,
+        { buffer = event.buf, desc = "go to declaration" },
+      },
+      ["gr"] = {
+        mode = "n",
+        rhs = snacks.picker.lsp_references,
+        { buffer = event.buf, desc = "go to references" },
+      },
+      ["gI"] = {
+        mode = "n",
+        rhs = snacks.picker.lsp_implementations,
+        { buffer = event.buf, desc = "go to implementation" },
+      },
+      ["gy"] = {
+        mode = "n",
+        rhs = snacks.picker.lsp_type_definitions,
+        { buffer = event.buf, desc = "go to type definition" },
+      },
+      ["<F2>"] = {
+        mode = "n",
+        rhs = vim.lsp.buf.rename,
+        { buffer = event.buf, desc = "rename symbol" },
+      },
+      ["<F4>"] = {
+        mode = "n",
+        rhs = vim.lsp.buf.code_action,
+        { buffer = event.buf, desc = "show code actions" },
+      },
+    })
 
-    -- stylua: ignore start
-    vim.keymap.set("n", "K",    vim.lsp.buf.hover,           { buffer = buffer, desc = "hover info" })
-    vim.keymap.set("n", "gd",   vim.lsp.buf.definition,      { buffer = buffer, desc = "go to definition" })
-    vim.keymap.set("n", "gD",   vim.lsp.buf.declaration,     { buffer = buffer, desc = "go to declaration" })
-    vim.keymap.set("n", "gi",   vim.lsp.buf.implementation,  { buffer = buffer, desc = "go to implementation" })
-    vim.keymap.set("n", "go",   vim.lsp.buf.type_definition, { buffer = buffer, desc = "go to type definition" })
-    vim.keymap.set("n", "gr",   vim.lsp.buf.references,      { buffer = buffer, desc = "show references" })
-    vim.keymap.set("n", "gs",   vim.lsp.buf.signature_help,  { buffer = buffer, desc = "show signature help" })
-    vim.keymap.set("n", "<F2>", vim.lsp.buf.rename,          { buffer = buffer, desc = "rename symbol" })
-    vim.keymap.set("n", "<F4>", vim.lsp.buf.code_action,     { buffer = buffer, desc = "show code actions" })
-    vim.keymap.set("n", "gl",   vim.diagnostic.open_float,   { buffer = buffer, desc = "open float" })
-    vim.keymap.set("n", "[d",   vim.diagnostic.goto_prev,    { buffer = buffer, desc = "go to next" })
-    vim.keymap.set("n", "]d",   vim.diagnostic.goto_next,    { buffer = buffer, desc = "go to previous" })
-    -- stylua: ignore end
+    -- This function resolves a difference between neovim nightly (version 0.11) and stable (version 0.10)
+    ---@param client vim.lsp.Client
+    ---@param method vim.lsp.protocol.Method
+    ---@param bufnr? integer some lsp support methods only in specific files
+    ---@return boolean
+    local function client_supports_method(client, method, bufnr)
+      if vim.fn.has("nvim-0.11") == 1 then
+        return client:supports_method(method, bufnr)
+      else
+        return client.supports_method(method, { bufnr = bufnr })
+      end
+    end
+
+    -- The following two autocommands are used to highlight references of the
+    -- word under your cursor when your cursor rests there for a little while.
+    --    See `:help CursorHold` for information about when this is executed
+    --
+    -- When you move your cursor, the highlights will be cleared (the second autocommand).
+    local client = vim.lsp.get_client_by_id(event.data.client_id)
+    if
+      client
+      and client_supports_method(
+        client,
+        vim.lsp.protocol.Methods.textDocument_documentHighlight,
+        event.buf
+      )
+    then
+      local highlight_augroup =
+        vim.api.nvim_create_augroup("LSP Highlight", { clear = false })
+
+      vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
+        buffer = event.buf,
+        group = highlight_augroup,
+        callback = vim.lsp.buf.document_highlight,
+      })
+
+      vim.api.nvim_create_autocmd({ "CursorMoved", "CursorMovedI" }, {
+        buffer = event.buf,
+        group = highlight_augroup,
+        callback = vim.lsp.buf.clear_references,
+      })
+
+      vim.api.nvim_create_autocmd("LspDetach", {
+        group = vim.api.nvim_create_augroup("LSP Detach", { clear = true }),
+        callback = function(event2)
+          vim.lsp.buf.clear_references()
+          vim.api.nvim_clear_autocmds({
+            group = "LSP Highlight",
+            buffer = event2.buf,
+          })
+        end,
+      })
+    end
+
+    -- The following code creates a keymap to toggle inlay hints in your
+    -- code, if the language server you are using supports them
+    --
+    -- This may be unwanted, since they displace some of your code
+    if
+      client
+      and client_supports_method(
+        client,
+        vim.lsp.protocol.Methods.textDocument_inlayHint,
+        event.buf
+      )
+    then
+      helpers.lmap({
+        ["th"] = {
+          mode = "n",
+          rhs = function()
+            vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled)
+          end,
+          { bufnr = event.buf, desc = "toggle inlay hints" },
+        },
+      })
+    end
   end,
 })
 
-local default_setup = function(server)
-  lspconfig[server].setup({})
-end
+-- Diagnostic Config
+-- See :help vim.diagnostic.Opts
+vim.diagnostic.config({
+  severity_sort = true,
+  float = { border = "rounded", source = "if_many" },
+  underline = { severity = vim.diagnostic.severity.ERROR },
+  signs = vim.g.have_nerd_font and {
+    text = {
+      [vim.diagnostic.severity.ERROR] = "󰅚 ",
+      [vim.diagnostic.severity.WARN] = "󰀪 ",
+      [vim.diagnostic.severity.INFO] = "󰋽 ",
+      [vim.diagnostic.severity.HINT] = "󰌶 ",
+    },
+  } or {},
+  virtual_text = {
+    source = "if_many",
+    spacing = 2,
+    format = function(diagnostic)
+      local diagnostic_message = {
+        [vim.diagnostic.severity.ERROR] = diagnostic.message,
+        [vim.diagnostic.severity.WARN] = diagnostic.message,
+        [vim.diagnostic.severity.INFO] = diagnostic.message,
+        [vim.diagnostic.severity.HINT] = diagnostic.message,
+      }
+      return diagnostic_message[diagnostic.severity]
+    end,
+  },
+})
 
-local mason_config = { ensure_installed = {}, handlers = { default_setup } }
+-- LSP servers and clients are able to communicate to each other what features they support.
+--  By default, Neovim doesn't support everything that is in the LSP specification.
+--  When you add nvim-cmp, luasnip, etc. Neovim now has *more* capabilities.
+--  So, we create new capabilities with nvim cmp, and then broadcast that to the servers.
+local capabilities = vim.lsp.protocol.make_client_capabilities()
+capabilities = vim.tbl_deep_extend(
+  "force",
+  capabilities,
+  require("cmp_nvim_lsp").default_capabilities()
+)
 
-for name, config in pairs(servers) do
-  table.insert(mason_config.ensure_installed, name)
-  mason_config.handlers[name] = function()
-    lspconfig[name].setup(config)
-  end
-end
+-- Ensure the servers and tools above are installed
+--
+-- To check the current status of installed tools and/or manually install
+-- other tools, you can run
+--    :Mason
+--
+-- You can press `g?` for help in this menu.
+--
+-- `mason` had to be setup earlier: to configure its options see the
+-- `dependencies` table for `nvim-lspconfig` above.
+--
+-- You can add other tools here that you want Mason to install
+-- for you, so that they are available from within Neovim.
+local ensure_installed = vim.tbl_keys(servers or {})
+vim.list_extend(ensure_installed, {
+  "stylua", -- Used to format Lua code
+})
+require("mason-tool-installer").setup({ ensure_installed = ensure_installed })
 
-require("mason").setup({})
-require("mason-lspconfig").setup(mason_config)
-
-InitLinting()
-InitFormatting()
--- }}}
--- =============================================================================
+require("mason-lspconfig").setup({
+  handlers = {
+    function(server_name)
+      local server = servers[server_name] or {}
+      -- This handles overriding only values explicitly passed
+      -- by the server configuration above. Useful when disabling
+      -- certain features of an LSP (for example, turning off formatting for ts_ls)
+      server.capabilities = vim.tbl_deep_extend(
+        "force",
+        {},
+        capabilities,
+        server.capabilities or {}
+      )
+      require("lspconfig")[server_name].setup(server)
+    end,
+  },
+})
