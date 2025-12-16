@@ -24,6 +24,7 @@ local servers = {
     -- should provide completions for. I only care about HTML/HTML templating
     filetypes = { "html", "heex", "eex", "njk", "astro" },
   },
+  expert = {},
   jsonls = {
     settings = {
       json = {
@@ -132,22 +133,22 @@ require("conform").setup({
   formatters_by_ft = {
     lua = { "stylua" },
     javascript = {
-      "deno_fmt",
       "biome",
+      "deno_fmt",
       "prettierd",
       "prettier",
       stop_after_first = true,
     },
     typescript = {
-      "deno_fmt",
       "biome",
+      "deno_fmt",
       "prettierd",
       "prettier",
       stop_after_first = true,
     },
     typescriptreact = {
-      "deno_fmt",
       "biome",
+      "deno_fmt",
       "prettierd",
       "prettier",
       stop_after_first = true,
