@@ -40,9 +40,6 @@ cmp.setup({
     format = lspkind.cmp_format({
       mode = "symbol",
       max_width = 50,
-      symbol_map = {
-        Supermaven = "",
-      },
     }),
   },
 })
