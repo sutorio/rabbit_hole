@@ -20,7 +20,6 @@ vim.opt.shortmess:append("c")
 -- =============================================================================
 cmp.setup({
   sources = {
-    { name = "supermaven" },
     { name = "nvim_lsp" },
     { name = "luasnip" },
     { name = "buffer" },
@@ -75,19 +74,5 @@ local snippets_fpath =
 
 require("luasnip.loaders.from_vscode").load({ paths = snippets_fpath })
 
--- }}}
--- =============================================================================
--- {{{ Supermaven AI completion
--- =============================================================================
-require("supermaven-nvim").setup({})
-
-require("sutorio.helpers").lmap({
-  ["ts"] = {
-    mode = "n",
-    rhs = "<Cmd>SupermavenToggle<Cr>",
-    desc = "toggle Supermaven AI completion",
-    opts = { silent = true },
-  },
-})
 -- }}}
 -- =============================================================================

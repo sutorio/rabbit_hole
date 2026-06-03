@@ -16,9 +16,6 @@ local servers = {
   astro = {},
   bashls = {},
   cssls = {},
-  denols = {
-    root_dir = lspconfig.util.root_pattern("deno.json", "deno.jsonc"),
-  },
   emmet_ls = {
     -- The Emmet language server requires hints re. which extensions it
     -- should provide completions for. I only care about HTML/HTML templating
@@ -66,18 +63,7 @@ local servers = {
     },
   },
   rust_analyzer = {},
-  tailwindcss = {
-    root_dir = lspconfig.util.root_pattern("tailwind.config.[mc]?js"),
-    settings = {
-      tailwindCSS = {
-        experimental = {
-          -- class variance authority support: see https://cva.style/docs/getting-started/installation
-          { "cva\\(([^)]*)\\)", "[\"'`]([^\"'`]*).*?[\"'`]" },
-          { "cx\\(([^)]*)\\)", "(?:'|\"|`)([^']*)(?:'|\"|`)" },
-        },
-      },
-    },
-  },
+  tailwindcss = {},
   -- Probably want to disable formatting for this lang server
   ts_ls = {
     root_dir = lspconfig.util.root_pattern(
@@ -133,22 +119,19 @@ require("conform").setup({
   formatters_by_ft = {
     lua = { "stylua" },
     javascript = {
-      "biome",
-      "deno_fmt",
+      "oxfmt",
       "prettierd",
       "prettier",
       stop_after_first = true,
     },
     typescript = {
-      "biome",
-      "deno_fmt",
+      "oxfmt",
       "prettierd",
       "prettier",
       stop_after_first = true,
     },
     typescriptreact = {
-      "biome",
-      "deno_fmt",
+      "oxfmt",
       "prettierd",
       "prettier",
       stop_after_first = true,

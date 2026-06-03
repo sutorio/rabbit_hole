@@ -5,7 +5,7 @@ Mainly garbage.
 ## Prerequisites:
 
 - Treesitter.
-- Neovim on path (I'm using nightly).
+- Neovim on path (I'm using 0.12.2, some stuff will break if it's < 0.12).
 - Some language runtimes on path, else some of the tooling probs ain't going to work.
 - Lua & luarocks & stylua on path if faffing around is required.
 - A font patched with powerline symbols set in yr terminal I guess.
