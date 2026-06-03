@@ -21,6 +21,7 @@ local servers = {
     -- should provide completions for. I only care about HTML/HTML templating
     filetypes = { "html", "heex", "eex", "njk", "astro" },
   },
+  erlangls = {},
   expert = {},
   jsonls = {
     settings = {

@@ -15,19 +15,24 @@ local helpers = require("sutorio.helpers")
 -- =============================================================================
 colorizer.setup({
   -- Specify filetypes to attach to. Can customise here per-filetype.
-  "*",
-}, {
-  -- Defaults
-  RGB = true, -- #RGB hex codes
-  RRGGBB = true, -- #RRGGBB hex codes
-  names = true, -- "Name" codes like Blue
-  RRGGBBAA = true, -- #RRGGBBAA hex codes
-  rgb_fn = true, -- CSS rgb() and rgba() functions
-  hsl_fn = true, -- CSS hsl() and hsla() functions
-  css = true, -- Enable all CSS features: rgb_fn, hsl_fn, names, RGB, RRGGBB
-  css_fn = true, -- Enable all CSS *functions*: rgb_fn, hsl_fn
-  -- Available modes: foreground, background
-  mode = "background", -- Set the display mode.
+  -- NOTE: see defaults at https://github.com/catgoose/nvim-colorizer.lua#default-configuration
+  filetypes = { "*" },
+  options = {
+    parsers = {
+      css = true, -- preset: enables names, hex, rgb, hsl, oklch, css_var
+      css_fn = true, -- preset: enables rgb, hsl, oklch
+      hwb = { enable = true }, -- hwb() function (CSS Color Level 4)
+      css_color = { enable = true }, -- color() function (srgb, display-p3, a98-rgb, etc.)
+      xterm = { enable = true }, -- xterm 256-color codes (#xNN, \e[38;5;NNNm)
+      hsluv = { enable = true }, -- hsluv()/hsluvu() functions
+      css_var_rgb = { enable = true }, -- CSS vars with R,G,B (e.g. --color: 240,198,198)
+    },
+    display = {
+      mode = "background", -- string or list: "background"|"foreground"|"underline"|"virtualtext"
+    },
+    always_update = true,
+    debounce_ms = 200,
+  },
 })
 -- }}}
 -- =============================================================================
