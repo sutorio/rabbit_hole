@@ -1,5 +1,3 @@
-local sutorio_helpers = require("sutorio.helpers")
-
 -- Leader key is set prior to anything else.
 vim.g.mapleader = vim.keycode("<space>")
 -- Add filetypes that are not currently being recognised
@@ -29,22 +27,21 @@ vim.opt.wrap = false
 -- YOLO. Swapfile/backup file stuff always ends up pissing me off more than helping me.
 vim.opt.swapfile = false
 vim.opt.backup = false
--- I very much want persistent undos, and I want them stored in a central location
-vim.opt.undodir = sutorio_helpers.path_join(os.getenv("HOME"), "/.vim/undodir")
+-- I very much want persistent undos. They're stored centrally in the default
+-- 'undodir' (`~/.local/state/nvim/undo/`).
 vim.opt.undofile = true
 -- Don't keep searches highlighted because it's just annoying.
 vim.opt.hlsearch = false
--- Do use incremental search because it's class.
-vim.opt.incsearch = true
 -- I like nice colours.
+-- NOTE: Neovim turns this on itself when it detects true-colour support, but
+--       `sutor_one` only defines `gui*` colours, so set it explicitly in case
+--       detection fails (eg inside tmux).
 vim.opt.termguicolors = true
 -- At least 8 lines visible at top & bottom of screen unless at start/end.
 -- Keeps the cursor in a more sensible position, can see what's above/below.
 vim.opt.scrolloff = 8
 -- Same for horizontal scrolling (albeit that is much less important)
 vim.opt.sidescrolloff = 8
--- Show autocomplete menu on <tab>
-vim.opt.wildmenu = true
 -- Yes, I absolutely do want some space next to the line numbers for signs
 -- an stuff.
 vim.opt.signcolumn = "yes"
@@ -54,7 +51,6 @@ vim.opt.signcolumn = "yes"
 vim.opt.foldcolumn = "1"
 vim.opt.foldenable = true
 vim.opt.modelines = 2
-vim.bo.modeline = true
 -- REVIEW: copypasta
 vim.opt.isfname:append("@-@")
 -- Show non-visible characters

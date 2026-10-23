@@ -4,10 +4,10 @@
 -- =============================================================================
 -- {{{ Aliases
 -- =============================================================================
-local cmp = require("cmp")
-local lspkind = require("lspkind")
-local luasnip = require("luasnip")
-local sutorio_helpers = require("sutorio.helpers")
+local completion = require("mini.completion")
+local snippets = require("mini.snippets")
+local icons = require("mini.icons")
+local helpers = require("sutorio.helpers")
 -- }}}
 -- =============================================================================
 -- {{{ Nvim settings
@@ -16,60 +16,85 @@ vim.opt.completeopt = { "menu", "menuone", "noselect" }
 vim.opt.shortmess:append("c")
 -- }}}
 -- =============================================================================
--- {{{ Completions setup
--- =============================================================================
-cmp.setup({
-  sources = {
-    { name = "nvim_lsp" },
-    { name = "luasnip" },
-    { name = "buffer" },
-    { name = "path" },
-  },
-  mapping = cmp.mapping.preset.insert({
-    -- Enter key confirms completion item
-    ["<CR>"] = cmp.mapping.confirm({ select = false }),
-    -- Ctrl + space triggers completion menu
-    ["<C-Space>"] = cmp.mapping.complete(),
-  }),
-  snippet = {
-    expand = function(args)
-      luasnip.lsp_expand(args.body)
-    end,
-  },
-  formatting = {
-    format = lspkind.cmp_format({
-      mode = "symbol",
-      max_width = 50,
-    }),
+-- {{{ Snippets setup
+snippets.setup({
+  snippets = {
+    -- Load custom file with global snippets first
+    snippets.gen_loader.from_file("~/.config/nvim/snippets/global.json"),
+    -- Load snippets based on current language by reading files from
+    -- "snippets/" subdirectories from 'runtimepath' directories.
+    -- NOTE: plugins such as "friendly snippets" should make their snippet
+    --       collections available on the "snippets/" runtime path.
+    snippets.gen_loader.from_lang(),
   },
 })
-
--- SQL completions need special handling, using TPope's "dadbod" vim plugin.
--- TODO: wrap this in an error handler in case dadbod isn't available
-cmp.setup.filetype({ "sql" }, {
-  sources = {
-    { name = "vim-dadbod-completion" },
-    { name = "buffer" },
-  },
-})
+-- Loaded snippets aren't shown in the completion menu by default: this starts
+-- a tiny LSP server that serves them to `mini.completion` as completion items.
+-- `match = false` leaves the matching/sorting to the completion engine.
+snippets.start_lsp_server({ match = false })
 -- }}}
 -- =============================================================================
--- {{{ Snippets setup
-luasnip.config.set_config({
-  history = true,
-  updateevents = "TextChanged, TextChangedI",
-  enable_autosnippets = true,
+-- {{{ Completions setup
+-- =============================================================================
+completion.setup({
+  mappings = {
+    -- Manually trigger the completion menu (this is the default, set here
+    -- so it's explicit).
+    force_twostep = "<C-Space>",
+  },
 })
--- For VSCode-style snippets, they need to live in a directory on the
--- runtime path, with a package.json manifest. So this is not, strictly
--- speaking, necessary (LuaSnip will locate the VSCode-style snippets by
--- default). But it allows other loaders to be added that point to this
--- directory without much fuss.
--- Why VSCode style snippets? Because I can reuse them in VSCode
-local snippets_fpath =
-  sutorio_helpers.path_join(vim.fn.stdpath("config"), "snippets")
+icons.setup()
+icons.tweak_lsp_kind()
+-- }}}
+-- =============================================================================
+-- {{{ Completion keymaps
+-- =============================================================================
+-- `<C-n>`/`<C-p>` move through the menu (built in).
+-- `<Tab>` accepts the highlighted item, or the first item if nothing has been
+-- highlighted yet. Inside a snippet session it jumps to the next tabstop.
+-- `<CR>` only confirms an item that has been explicitly highlighted, otherwise
+-- it's a normal newline.
+local function pmenu_has_selection()
+  return vim.fn.complete_info({ "selected" }).selected ~= -1
+end
 
-require("luasnip.loaders.from_vscode").load({ paths = snippets_fpath })
-
+helpers.kmap({
+  ["<Tab>"] = {
+    mode = "i",
+    rhs = function()
+      if snippets.session.get() then
+        return '<Cmd>lua require("mini.snippets").session.jump("next")<CR>'
+      end
+      if vim.fn.pumvisible() == 1 then
+        return pmenu_has_selection() and "<C-y>" or "<C-n><C-y>"
+      end
+      return "<Tab>"
+    end,
+    desc = "accept completion / next snippet tabstop",
+    opts = { expr = true },
+  },
+  ["<S-Tab>"] = {
+    mode = "i",
+    rhs = function()
+      if snippets.session.get() then
+        return '<Cmd>lua require("mini.snippets").session.jump("prev")<CR>'
+      end
+      return "<S-Tab>"
+    end,
+    desc = "previous snippet tabstop",
+    opts = { expr = true },
+  },
+  ["<CR>"] = {
+    mode = "i",
+    rhs = function()
+      if vim.fn.pumvisible() == 1 and pmenu_has_selection() then
+        return "<C-y>"
+      end
+      return "<CR>"
+    end,
+    desc = "confirm selected completion",
+    opts = { expr = true },
+  },
+})
 -- }}}
 -- =============================================================================
