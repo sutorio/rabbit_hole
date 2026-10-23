@@ -8,7 +8,6 @@
 -- {{{ Aliases
 -- =============================================================================
 local colorizer = require("colorizer")
-local helpers = require("sutorio.helpers")
 -- }}}
 -- =============================================================================
 -- {{{ Setup
@@ -38,12 +37,11 @@ colorizer.setup({
 -- =============================================================================
 -- {{{ Mappings
 -- =============================================================================
-helpers.lmap({
-  ["tc"] = {
-    mode = "n",
-    rhs = "<Cmd>ColorizerToggle<Cr>",
-    desc = "toggle color highlights",
-  },
-})
+vim.keymap.set(
+  "n",
+  "<Leader>tc",
+  "<Cmd>ColorizerToggle<Cr>",
+  { desc = "toggle color highlights" }
+)
 -- }}}
 -- =============================================================================

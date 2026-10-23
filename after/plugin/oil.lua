@@ -6,6 +6,9 @@ require("oil").setup({
   experimental_watch_for_changes = true,
 })
 
-require("sutorio.helpers").lmap({
-  ["n-"] = { mode = "n", rhs = "<Cmd>Oil<Cr>", desc = "open parent directory" },
-})
+vim.keymap.set(
+  "n",
+  "<Leader>n-",
+  "<Cmd>Oil<Cr>",
+  { desc = "open parent directory" }
+)

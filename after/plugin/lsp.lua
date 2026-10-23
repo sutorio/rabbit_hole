@@ -4,7 +4,6 @@
 -- =============================================================================
 -- {{{ Aliases
 -- =============================================================================
-local helpers = require("sutorio.helpers")
 local snacks = require("snacks")
 local completion = require("mini.completion")
 -- }}}
@@ -139,15 +138,9 @@ require("conform").setup({
   },
 })
 
-helpers.lmap({
-  ["ef"] = {
-    mode = "n",
-    rhs = function()
-      require("conform").format({ async = true, lsp_format = "fallback" })
-    end,
-    desc = "[e]diting: [f]ormat document",
-  },
-})
+vim.keymap.set("n", "<Leader>ef", function()
+  require("conform").format({ async = true, lsp_format = "fallback" })
+end, { desc = "[e]diting: [f]ormat document" })
 
 -- }}}
 -- =============================================================================
@@ -221,52 +214,18 @@ vim.api.nvim_create_autocmd("LspAttach", {
     --       action), `grr`, `gri`, `grt`, `gO` and insert-mode `<C-s>`
     --       (signature help) by default, see `:help lsp-defaults`. The
     --       mappings here add to/override those.
-    helpers.kmap({
-      ["gd"] = {
-        mode = "n",
-        rhs = snacks.picker.lsp_definitions,
-        desc = "go to definition",
-        opts = { buffer = event.buf },
-      },
-      ["gD"] = {
-        mode = "n",
-        rhs = snacks.picker.lsp_declarations,
-        desc = "go to declaration",
-        opts = { buffer = event.buf },
-      },
-      -- Overrides the built-in `grr` (quickfix list) with the picker. Not
-      -- mapped to plain `gr`, since that would shadow the built-in `gr*` keys.
-      ["grr"] = {
-        mode = "n",
-        rhs = snacks.picker.lsp_references,
-        desc = "go to references",
-        opts = { buffer = event.buf },
-      },
-      ["gI"] = {
-        mode = "n",
-        rhs = snacks.picker.lsp_implementations,
-        desc = "go to implementation",
-        opts = { buffer = event.buf },
-      },
-      ["gy"] = {
-        mode = "n",
-        rhs = snacks.picker.lsp_type_definitions,
-        desc = "go to type definition",
-        opts = { buffer = event.buf },
-      },
-      ["<F2>"] = {
-        mode = "n",
-        rhs = vim.lsp.buf.rename,
-        desc = "rename symbol",
-        opts = { buffer = event.buf },
-      },
-      ["<F4>"] = {
-        mode = "n",
-        rhs = vim.lsp.buf.code_action,
-        desc = "show code actions",
-        opts = { buffer = event.buf },
-      },
-    })
+    local function map(lhs, rhs, desc)
+      vim.keymap.set("n", lhs, rhs, { buffer = event.buf, desc = desc })
+    end
+    map("gd", snacks.picker.lsp_definitions, "go to definition")
+    map("gD", snacks.picker.lsp_declarations, "go to declaration")
+    -- Overrides the built-in `grr` (quickfix list) with the picker. Not
+    -- mapped to plain `gr`, since that would shadow the built-in `gr*` keys.
+    map("grr", snacks.picker.lsp_references, "go to references")
+    map("gI", snacks.picker.lsp_implementations, "go to implementation")
+    map("gy", snacks.picker.lsp_type_definitions, "go to type definition")
+    map("<F2>", vim.lsp.buf.rename, "rename symbol")
+    map("<F4>", vim.lsp.buf.code_action, "show code actions")
 
     -- The following two autocommands are used to highlight references of the
     -- word under your cursor when your cursor rests there for a little while.
@@ -311,20 +270,13 @@ vim.api.nvim_create_autocmd("LspAttach", {
         event.buf
       )
     then
-      helpers.lmap({
-        ["th"] = {
-          mode = "n",
-          rhs = function()
-            local filter = { bufnr = event.buf }
-            vim.lsp.inlay_hint.enable(
-              not vim.lsp.inlay_hint.is_enabled(filter),
-              filter
-            )
-          end,
-          desc = "toggle inlay hints",
-          opts = { buffer = event.buf },
-        },
-      })
+      map("<Leader>th", function()
+        local filter = { bufnr = event.buf }
+        vim.lsp.inlay_hint.enable(
+          not vim.lsp.inlay_hint.is_enabled(filter),
+          filter
+        )
+      end, "toggle inlay hints")
     end
   end,
 })

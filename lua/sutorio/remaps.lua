@@ -43,41 +43,36 @@ vim.keymap.set("v", "K", ":m '<-2<CR>gv=gv")
 -- {{{ Leader mappings
 -- =============================================================================
 -- stylua: ignore start
-require("sutorio.helpers").lmap({
-    -- -------------------------------------------------------------------------
-    -- B is for buffer-related tasks
-    -- -------------------------------------------------------------------------
-    -- "update" rather than "write"; "update" only updates if the file has changed;
-    -- "write" will update regardless (will act like 'touch' and update the timestamp).
-    ["w"]  = { mode = "n", rhs = "<Cmd>update<Cr>", desc = "save current file" },
-    -- -------------------------------------------------------------------------
-    -- E is for text-editing-related tasks
-    -- -------------------------------------------------------------------------
-    -- When you paste *over* other text, Vim replaces the buffer with the replaced text.
-    -- This is really annoying most of the time! So `<leader>p` will do what is expected (keep original text in-buffer).
-    ["ep"]  = { mode = "x", rhs = [["_dP]], desc = "paste but keep original text in buffer"},
-    -- ["ef"]  = { mode = "n", rhs = vim.lsp.buf.format, desc = "format current file" },
-    -- Search based on the word under the cursor. Note that this seeds the search, can modify the search once the command is ran.
-    ["es"]  = { mode = "n", rhs = [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]], desc = "start search based on word under cursor" },
-    ["ey"]  = { mode = { "n", "v" }, rhs = [["+y]], desc = "yank to system clipboard" },
-    ["eY"]  = { mode = "n", rhs = [["+Y]], desc = "yank line to system clipboard" },
-    -- NOTE: this is crap - p is already taken & only got paste below & don't have
-    -- `<space>ep` behaviour &c. Have a think, may need some magic.
-    ["ez"]  = { mode = "n", rhs = [["+p]], desc = "paste from system clipboard" },
-    -- -------------------------------------------------------------------------
-    -- Neovim-specific/inbuilt system-related tasks
-    -- -------------------------------------------------------------------------
-    -- REVIEW: testing Oil.nvim (https://github.com/stevearc/oil.nvim), so disable the netrw stuff for now.
-    -- ["n/"] = { mode = "n", rhs = vim.cmd.Ex, desc = "open netrw" },
-    ["ns"] = { mode = "n", rhs = "<Cmd>so<Cr>", desc = "source current file" },
-    ["nx"] = { mode = "n", rhs = "<Cmd>!chmod +x %<CR>", desc = "chmod +x the current file", opts = { silent = true }},
-    -- -------------------------------------------------------------------------
-    -- Toggles
-    -- -------------------------------------------------------------------------
-    ["tb"] = { mode = "n", rhs = "<Cmd>ToggleColorColumn<Cr>", desc = "toggle colorcolumn", opts = { silent = true }},
-    ["tl"] = { mode = "n", rhs = "<Cmd>ToggleListChars<Cr>", desc = "toggle list chars", opts = { silent = true }},
-    ["tw"] = { mode = "n", rhs = "<Cmd>ToggleWordWrap<Cr>", desc = "toggle word wrap", opts = { silent = true }},
-})
+-- -----------------------------------------------------------------------------
+-- B is for buffer-related tasks
+-- -----------------------------------------------------------------------------
+-- "update" rather than "write"; "update" only updates if the file has changed;
+-- "write" will update regardless (will act like 'touch' and update the timestamp).
+vim.keymap.set("n", "<Leader>w", "<Cmd>update<Cr>", { desc = "save current file" })
+-- -----------------------------------------------------------------------------
+-- E is for text-editing-related tasks
+-- -----------------------------------------------------------------------------
+-- When you paste *over* other text, Vim replaces the buffer with the replaced text.
+-- This is really annoying most of the time! So `<leader>p` will do what is expected (keep original text in-buffer).
+vim.keymap.set("x", "<Leader>ep", [["_dP]], { desc = "paste but keep original text in buffer" })
+-- Search based on the word under the cursor. Note that this seeds the search, can modify the search once the command is ran.
+vim.keymap.set("n", "<Leader>es", [[:%s/\<<C-r><C-w>\>/<C-r><C-w>/gI<Left><Left><Left>]], { desc = "start search based on word under cursor" })
+vim.keymap.set({ "n", "v" }, "<Leader>ey", [["+y]], { desc = "yank to system clipboard" })
+vim.keymap.set("n", "<Leader>eY", [["+Y]], { desc = "yank line to system clipboard" })
+-- NOTE: this is crap - p is already taken & only got paste below & don't have
+-- `<space>ep` behaviour &c. Have a think, may need some magic.
+vim.keymap.set("n", "<Leader>ez", [["+p]], { desc = "paste from system clipboard" })
+-- -----------------------------------------------------------------------------
+-- Neovim-specific/inbuilt system-related tasks
+-- -----------------------------------------------------------------------------
+vim.keymap.set("n", "<Leader>ns", "<Cmd>so<Cr>", { desc = "source current file" })
+vim.keymap.set("n", "<Leader>nx", "<Cmd>!chmod +x %<CR>", { desc = "chmod +x the current file", silent = true })
+-- -----------------------------------------------------------------------------
+-- Toggles
+-- -----------------------------------------------------------------------------
+vim.keymap.set("n", "<Leader>tb", "<Cmd>ToggleColorColumn<Cr>", { desc = "toggle colorcolumn", silent = true })
+vim.keymap.set("n", "<Leader>tl", "<Cmd>ToggleListChars<Cr>", { desc = "toggle list chars", silent = true })
+vim.keymap.set("n", "<Leader>tw", "<Cmd>ToggleWordWrap<Cr>", { desc = "toggle word wrap", silent = true })
 -- stylua: ignore end
 
 -- NOTE: quickfix/location list navigation uses the built-in `]q`/`[q` and
