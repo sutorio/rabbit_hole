@@ -80,13 +80,7 @@ require("sutorio.helpers").lmap({
 })
 -- stylua: ignore end
 
-
--- stylua: ignore start
--- Move up and down a quickfix list.
-vim.keymap.set("n", "<C-k>", "<cmd>cnext<CR>zz", { desc = "move up quickfixlist" })
-vim.keymap.set("n", "<C-j>", "<cmd>cprev<CR>zz", { desc = "move up quickfixlist" })
-vim.keymap.set("n", "<leader>k", "<cmd>lnext<CR>zz", { desc = "move up loclist" })
-vim.keymap.set("n", "<leader>j", "<cmd>lprev<CR>zz", { desc = "move down loclist" })
--- stylua: ignore end
+-- NOTE: quickfix/location list navigation uses the built-in `]q`/`[q` and
+--       `]l`/`[l` (plus `]Q`/`[Q` etc for first/last), see `:help ]q`.
 -- }}}
 -- =============================================================================

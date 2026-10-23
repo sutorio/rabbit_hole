@@ -2,14 +2,28 @@
 -- =============================================================================
 -- Undotree settings
 --
--- For reference, see https://github.com/mbbill/undotree
+-- Uses Neovim's built-in undotree plugin (0.12+), which isn't loaded by
+-- default. For reference, see `:help package-undotree`.
+-- =============================================================================
+-- {{{ Aliases
 -- =============================================================================
 local helpers = require("sutorio.helpers")
-
+-- }}}
+-- =============================================================================
+-- {{{ Setup
+-- =============================================================================
+vim.cmd.packadd("nvim.undotree")
+-- }}}
+-- =============================================================================
+-- {{{ Mappings
+-- =============================================================================
 helpers.lmap({
   ["eu"] = {
     mode = "n",
-    rhs = vim.cmd.UndotreeToggle,
+    -- `:Undotree` toggles: it closes the window if it's already open.
+    rhs = vim.cmd.Undotree,
     desc = "undotree toggle open/close",
   },
 })
+-- }}}
+-- =============================================================================

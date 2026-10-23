@@ -14,7 +14,6 @@
 -- =============================================================================
 local starter = require("mini.starter")
 local statusline = require("mini.statusline")
-local comment = require("mini.comment")
 local highlight_patterns = require("mini.hipatterns")
 -- }}}
 -- =============================================================================
@@ -25,7 +24,7 @@ local greeting = function()
   -- [04:00, 12:00) - morning, [12:00, 20:00) - day, [20:00, 04:00) - evening
   local part_id = math.floor((hour + 4) / 8) + 1
   local day_part = ({ "evening", "morning", "afternoon", "evening" })[part_id]
-  local username = vim.loop.os_get_passwd()["username"] or "USERNAME"
+  local username = vim.uv.os_get_passwd()["username"] or "USERNAME"
 
   return ("Good %s, %s"):format(day_part, username)
 end
@@ -206,16 +205,18 @@ local oblique_strategies = function(max_width)
 end
 
 local render_oblique_strategy = (function()
-  local timer = vim.loop.new_timer()
+  local timer = vim.uv.new_timer()
   timer:start(
     0,
     5000,
     vim.schedule_wrap(function()
-      if vim.api.nvim_get_option_value("filetype", { buf = 0}) ~= "starter" then
+      if
+        vim.api.nvim_get_option_value("filetype", { buf = 0 }) ~= "starter"
+      then
         timer:stop()
         return
       end
-      MiniStarter.refresh()
+      starter.refresh()
     end)
   )
   return function()
@@ -242,11 +243,6 @@ starter.setup({
 -- {{{ mini.statusline
 -- =============================================================================
 statusline.setup()
--- }}}
--- =============================================================================
--- {{{ mini.comment
--- =============================================================================
-comment.setup()
 -- }}}
 -- =============================================================================
 -- {{{  mini.highlight

@@ -4,24 +4,18 @@
 -- =============================================================================
 -- {{{ Aliases
 -- =============================================================================
-local lspconfig = require("lspconfig")
-local lsp_defaults = lspconfig.util.default_config
 local helpers = require("sutorio.helpers")
 local snacks = require("snacks")
+local completion = require("mini.completion")
 -- }}}
 -- =============================================================================
 -- {{{ LSP server custom rules (overrides defaults)
 -- =============================================================================
 local servers = {
-  astro = {},
   bashls = {},
   cssls = {},
-  emmet_ls = {
-    -- The Emmet language server requires hints re. which extensions it
-    -- should provide completions for. I only care about HTML/HTML templating
-    filetypes = { "html", "heex", "eex", "njk", "astro" },
-  },
-  erlangls = {},
+  -- NOTE: `erlangls` has been dropped from nvim-lspconfig, ELP is the replacement
+  elp = {},
   expert = {},
   jsonls = {
     settings = {
@@ -42,9 +36,6 @@ local servers = {
         },
         diagnostics = {
           enable = true,
-          -- The Lua language server is being used for Neovim stuff,
-          -- globals listed relate to Neovim development.
-          globals = { "vim" },
           -- REVIEW: this is to suppress the "missing parameters" warning that
           --         often crops up for `setup` options for plugins in particular.
           --         This is not necessarily a good idea: the warning is caused
@@ -53,26 +44,33 @@ local servers = {
           disable = { "missing-parameters", "missing-fields" },
         },
         workspace = {
-          -- Make the server aware of Neovim runtime files
-          library = vim.api.nvim_get_runtime_file("", true),
+          -- Make the server aware of Neovim runtime files.
+          -- NOTE: only `$VIMRUNTIME`: passing the whole runtimepath (i.e. every
+          --       plugin) makes the workspace take ~30s to load, during which
+          --       lua_ls returns no completions at all.
+          library = { vim.env.VIMRUNTIME },
           maxPreload = 10000,
           preloadFileSize = 10000,
           checkThirdParty = false,
         },
-        telemetry = { enable = false },
       },
     },
   },
   rust_analyzer = {},
   tailwindcss = {},
-  -- Probably want to disable formatting for this lang server
   ts_ls = {
-    root_dir = lspconfig.util.root_pattern(
-      "package.json",
-      "tsconfig.json",
-      "jsconfig.json"
-    ),
-    single_file_support = false,
+    -- Only attach inside a JS/TS project. Not calling `on_dir` means the server
+    -- doesn't start (the replacement for `single_file_support = false`).
+    root_dir = function(bufnr, on_dir)
+      local root = vim.fs.root(bufnr, {
+        "package.json",
+        "tsconfig.json",
+        "jsconfig.json",
+      })
+      if root then
+        on_dir(root)
+      end
+    end,
   },
   yamlls = {
     settings = {
@@ -147,7 +145,7 @@ helpers.lmap({
     rhs = function()
       require("conform").format({ async = true, lsp_format = "fallback" })
     end,
-    { desc = "[e]diting]: [f]ormat document" },
+    desc = "[e]diting: [f]ormat document",
   },
 })
 
@@ -183,6 +181,35 @@ helpers.lmap({
 -- If you're wondering about lsp vs treesitter, you can check out the wonderfully
 -- and elegantly composed help section, `:help lsp-vs-treesitter`
 
+-- Add the same capabilities to ALL server configurations.
+-- Refer to :h vim.lsp.config() for more information.
+vim.lsp.config("*", {
+  capabilities = completion.get_lsp_capabilities(),
+})
+
+-- Apply the server-specific overrides on top of the nvim-lspconfig defaults.
+for server_name, server in pairs(servers) do
+  vim.lsp.config(server_name, server)
+end
+
+-- Holds the buffer-local reference-highlight autocmds (see the LspAttach
+-- callback). Created up front so it always exists when LspDetach clears it,
+-- even if no attached server supports document highlights.
+local highlight_augroup =
+  vim.api.nvim_create_augroup("LSP Highlight", { clear = true })
+
+-- Clear reference highlights when an LSP detaches.
+vim.api.nvim_create_autocmd("LspDetach", {
+  group = vim.api.nvim_create_augroup("LSP Detach", { clear = true }),
+  callback = function(event)
+    vim.lsp.buf.clear_references()
+    vim.api.nvim_clear_autocmds({
+      group = highlight_augroup,
+      buffer = event.buf,
+    })
+  end,
+})
+
 --  This function gets run when an LSP attaches to a particular buffer.
 --  That is to say, every time a new file is opened that is associated with
 --  an lsp (for example, opening `main.rs` is associated with `rust_analyzer`) this
@@ -190,61 +217,56 @@ helpers.lmap({
 vim.api.nvim_create_autocmd("LspAttach", {
   group = vim.api.nvim_create_augroup("LSP Actions", { clear = true }),
   callback = function(event)
+    -- NOTE: Neovim already maps `K` (hover), `grn` (rename), `gra` (code
+    --       action), `grr`, `gri`, `grt`, `gO` and insert-mode `<C-s>`
+    --       (signature help) by default, see `:help lsp-defaults`. The
+    --       mappings here add to/override those.
     helpers.kmap({
-      ["K"] = {
-        mode = "n",
-        rhs = vim.lsp.buf.hover,
-        { buffer = event.buf, desc = "hover info" },
-      },
       ["gd"] = {
         mode = "n",
         rhs = snacks.picker.lsp_definitions,
-        { buffer = event.buf, desc = "go to definition" },
+        desc = "go to definition",
+        opts = { buffer = event.buf },
       },
       ["gD"] = {
         mode = "n",
         rhs = snacks.picker.lsp_declarations,
-        { buffer = event.buf, desc = "go to declaration" },
+        desc = "go to declaration",
+        opts = { buffer = event.buf },
       },
-      ["gr"] = {
+      -- Overrides the built-in `grr` (quickfix list) with the picker. Not
+      -- mapped to plain `gr`, since that would shadow the built-in `gr*` keys.
+      ["grr"] = {
         mode = "n",
         rhs = snacks.picker.lsp_references,
-        { buffer = event.buf, desc = "go to references" },
+        desc = "go to references",
+        opts = { buffer = event.buf },
       },
       ["gI"] = {
         mode = "n",
         rhs = snacks.picker.lsp_implementations,
-        { buffer = event.buf, desc = "go to implementation" },
+        desc = "go to implementation",
+        opts = { buffer = event.buf },
       },
       ["gy"] = {
         mode = "n",
         rhs = snacks.picker.lsp_type_definitions,
-        { buffer = event.buf, desc = "go to type definition" },
+        desc = "go to type definition",
+        opts = { buffer = event.buf },
       },
       ["<F2>"] = {
         mode = "n",
         rhs = vim.lsp.buf.rename,
-        { buffer = event.buf, desc = "rename symbol" },
+        desc = "rename symbol",
+        opts = { buffer = event.buf },
       },
       ["<F4>"] = {
         mode = "n",
         rhs = vim.lsp.buf.code_action,
-        { buffer = event.buf, desc = "show code actions" },
+        desc = "show code actions",
+        opts = { buffer = event.buf },
       },
     })
-
-    -- This function resolves a difference between neovim nightly (version 0.11) and stable (version 0.10)
-    ---@param client vim.lsp.Client
-    ---@param method vim.lsp.protocol.Method
-    ---@param bufnr? integer some lsp support methods only in specific files
-    ---@return boolean
-    local function client_supports_method(client, method, bufnr)
-      if vim.fn.has("nvim-0.11") == 1 then
-        return client:supports_method(method, bufnr)
-      else
-        return client.supports_method(method, { bufnr = bufnr })
-      end
-    end
 
     -- The following two autocommands are used to highlight references of the
     -- word under your cursor when your cursor rests there for a little while.
@@ -254,14 +276,16 @@ vim.api.nvim_create_autocmd("LspAttach", {
     local client = vim.lsp.get_client_by_id(event.data.client_id)
     if
       client
-      and client_supports_method(
-        client,
+      and client:supports_method(
         vim.lsp.protocol.Methods.textDocument_documentHighlight,
         event.buf
       )
     then
-      local highlight_augroup =
-        vim.api.nvim_create_augroup("LSP Highlight", { clear = false })
+      -- Avoid stacking duplicate autocmds if several clients attach.
+      vim.api.nvim_clear_autocmds({
+        group = highlight_augroup,
+        buffer = event.buf,
+      })
 
       vim.api.nvim_create_autocmd({ "CursorHold", "CursorHoldI" }, {
         buffer = event.buf,
@@ -274,17 +298,6 @@ vim.api.nvim_create_autocmd("LspAttach", {
         group = highlight_augroup,
         callback = vim.lsp.buf.clear_references,
       })
-
-      vim.api.nvim_create_autocmd("LspDetach", {
-        group = vim.api.nvim_create_augroup("LSP Detach", { clear = true }),
-        callback = function(event2)
-          vim.lsp.buf.clear_references()
-          vim.api.nvim_clear_autocmds({
-            group = "LSP Highlight",
-            buffer = event2.buf,
-          })
-        end,
-      })
     end
 
     -- The following code creates a keymap to toggle inlay hints in your
@@ -293,8 +306,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
     -- This may be unwanted, since they displace some of your code
     if
       client
-      and client_supports_method(
-        client,
+      and client:supports_method(
         vim.lsp.protocol.Methods.textDocument_inlayHint,
         event.buf
       )
@@ -303,9 +315,14 @@ vim.api.nvim_create_autocmd("LspAttach", {
         ["th"] = {
           mode = "n",
           rhs = function()
-            vim.lsp.inlay_hint.enable(not vim.lsp.inlay_hint.is_enabled)
+            local filter = { bufnr = event.buf }
+            vim.lsp.inlay_hint.enable(
+              not vim.lsp.inlay_hint.is_enabled(filter),
+              filter
+            )
           end,
-          { bufnr = event.buf, desc = "toggle inlay hints" },
+          desc = "toggle inlay hints",
+          opts = { buffer = event.buf },
         },
       })
     end
@@ -318,39 +335,20 @@ vim.diagnostic.config({
   severity_sort = true,
   float = { border = "rounded", source = "if_many" },
   underline = { severity = vim.diagnostic.severity.ERROR },
-  signs = vim.g.have_nerd_font and {
+  -- NOTE: needs a Nerd Font (as do the `mini.icons` glyphs).
+  signs = {
     text = {
       [vim.diagnostic.severity.ERROR] = "󰅚 ",
       [vim.diagnostic.severity.WARN] = "󰀪 ",
       [vim.diagnostic.severity.INFO] = "󰋽 ",
       [vim.diagnostic.severity.HINT] = "󰌶 ",
     },
-  } or {},
+  },
   virtual_text = {
     source = "if_many",
     spacing = 2,
-    format = function(diagnostic)
-      local diagnostic_message = {
-        [vim.diagnostic.severity.ERROR] = diagnostic.message,
-        [vim.diagnostic.severity.WARN] = diagnostic.message,
-        [vim.diagnostic.severity.INFO] = diagnostic.message,
-        [vim.diagnostic.severity.HINT] = diagnostic.message,
-      }
-      return diagnostic_message[diagnostic.severity]
-    end,
   },
 })
-
--- LSP servers and clients are able to communicate to each other what features they support.
---  By default, Neovim doesn't support everything that is in the LSP specification.
---  When you add nvim-cmp, luasnip, etc. Neovim now has *more* capabilities.
---  So, we create new capabilities with nvim cmp, and then broadcast that to the servers.
-local capabilities = vim.lsp.protocol.make_client_capabilities()
-capabilities = vim.tbl_deep_extend(
-  "force",
-  capabilities,
-  require("cmp_nvim_lsp").default_capabilities()
-)
 
 -- Ensure the servers and tools above are installed
 --
@@ -360,31 +358,28 @@ capabilities = vim.tbl_deep_extend(
 --
 -- You can press `g?` for help in this menu.
 --
--- `mason` had to be setup earlier: to configure its options see the
--- `dependencies` table for `nvim-lspconfig` above.
+-- `mason-lspconfig` only knows about LSP servers: other tools (formatters,
+-- linters) are listed in `tools` below and installed via the Mason registry.
 --
--- You can add other tools here that you want Mason to install
--- for you, so that they are available from within Neovim.
-local ensure_installed = vim.tbl_keys(servers or {})
-vim.list_extend(ensure_installed, {
-  "stylua", -- Used to format Lua code
-})
-require("mason-tool-installer").setup({ ensure_installed = ensure_installed })
-
+-- NOTE: `mason-lspconfig` v2 no longer has `handlers`: the server configs are
+-- registered above via `vim.lsp.config`, and `automatic_enable` (on by default)
+-- calls `vim.lsp.enable` for every installed server.
+require("mason").setup()
 require("mason-lspconfig").setup({
-  handlers = {
-    function(server_name)
-      local server = servers[server_name] or {}
-      -- This handles overriding only values explicitly passed
-      -- by the server configuration above. Useful when disabling
-      -- certain features of an LSP (for example, turning off formatting for ts_ls)
-      server.capabilities = vim.tbl_deep_extend(
-        "force",
-        {},
-        capabilities,
-        server.capabilities or {}
-      )
-      require("lspconfig")[server_name].setup(server)
-    end,
-  },
+  ensure_installed = vim.tbl_keys(servers),
 })
+
+local tools = {
+  "stylua", -- Used to format Lua code
+}
+local registry = require("mason-registry")
+-- `refresh` is async: it updates the package registry (if stale), then
+-- installs any listed tool that's missing.
+registry.refresh(function()
+  for _, name in ipairs(tools) do
+    local pkg = registry.get_package(name)
+    if not pkg:is_installed() and not pkg:is_installing() then
+      pkg:install()
+    end
+  end
+end)

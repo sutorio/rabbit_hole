@@ -7,10 +7,7 @@ require("which-key").add({
   { "<Leader>e", group = "Editing" },
   { "<Leader>es", group = "Scratch buffers" },
   { "<Leader>f", group = "Find" },
-  { "<Leader>l", group = "LSP" },
-  { "<Leader>lc", group = "LSP code actions" },
-  { "<Leader>lg", group = "LSP goto" },
-  { "<Leader>lw", group = "LSP workspace" },
   { "<Leader>n", group = "NVim-related" },
   { "<Leader>t", group = "Toggle" },
+  { "<Leader>x", group = "Trouble" },
 })
