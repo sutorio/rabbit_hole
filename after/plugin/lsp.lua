@@ -8,83 +8,6 @@ local snacks = require("snacks")
 local completion = require("mini.completion")
 -- }}}
 -- =============================================================================
--- {{{ LSP server custom rules (overrides defaults)
--- =============================================================================
-local servers = {
-  bashls = {},
-  cssls = {},
-  -- NOTE: `erlangls` has been dropped from nvim-lspconfig, ELP is the replacement
-  elp = {},
-  expert = {},
-  jsonls = {
-    settings = {
-      json = {
-        schemas = require("schemastore").json.schemas(),
-        validate = { enable = true },
-      },
-    },
-  },
-  lua_ls = {
-    settings = {
-      Lua = {
-        runtime = {
-          version = "LuaJIT",
-        },
-        completion = {
-          callSnippet = "Replace",
-        },
-        diagnostics = {
-          enable = true,
-          -- REVIEW: this is to suppress the "missing parameters" warning that
-          --         often crops up for `setup` options for plugins in particular.
-          --         This is not necessarily a good idea: the warning is caused
-          --         by plugins {mis|over}specifying the types for option tables.
-          --         **IT MAY CAUSE FALSE NEGATIVES, WHEN I HAVE MADE AN ERROR**
-          disable = { "missing-parameters", "missing-fields" },
-        },
-        workspace = {
-          -- Make the server aware of Neovim runtime files.
-          -- NOTE: only `$VIMRUNTIME`: passing the whole runtimepath (i.e. every
-          --       plugin) makes the workspace take ~30s to load, during which
-          --       lua_ls returns no completions at all.
-          library = { vim.env.VIMRUNTIME },
-          maxPreload = 10000,
-          preloadFileSize = 10000,
-          checkThirdParty = false,
-        },
-      },
-    },
-  },
-  rust_analyzer = {},
-  tailwindcss = {},
-  ts_ls = {
-    -- Only attach inside a JS/TS project. Not calling `on_dir` means the server
-    -- doesn't start (the replacement for `single_file_support = false`).
-    root_dir = function(bufnr, on_dir)
-      local root = vim.fs.root(bufnr, {
-        "package.json",
-        "tsconfig.json",
-        "jsconfig.json",
-      })
-      if root then
-        on_dir(root)
-      end
-    end,
-  },
-  yamlls = {
-    settings = {
-      yaml = {
-        schemaStore = {
-          enable = false,
-          url = "",
-        },
-        schemas = require("schemastore").yaml.schemas(),
-      },
-    },
-  },
-}
-
--- =============================================================================
 -- {{{ Formatters
 -- =============================================================================
 -- `conform.nvim` provides the formatting infra.
@@ -180,10 +103,8 @@ vim.lsp.config("*", {
   capabilities = completion.get_lsp_capabilities(),
 })
 
--- Apply the server-specific overrides on top of the nvim-lspconfig defaults.
-for server_name, server in pairs(servers) do
-  vim.lsp.config(server_name, server)
-end
+-- Server-specific overrides of the nvim-lspconfig defaults live in `after/lsp/`
+-- (one `<server>.lua` file per server, returning a config table).
 
 -- Holds the buffer-local reference-highlight autocmds (see the LspAttach
 -- callback). Created up front so it always exists when LspDetach clears it,
@@ -302,23 +223,24 @@ vim.diagnostic.config({
   },
 })
 
--- Ensure the servers and tools above are installed
+-- Mason manages the language servers: every LSP server installed via `:Mason`
+-- is enabled automatically (mason-lspconfig's `automatic_enable`, on by
+-- default), using nvim-lspconfig's config plus any override in `after/lsp/`.
+-- So to add or remove a language server, (un)install it in `:Mason`.
 --
--- To check the current status of installed tools and/or manually install
--- other tools, you can run
---    :Mason
---
--- You can press `g?` for help in this menu.
---
+-- `ensure_installed` is just the baseline for a fresh install.
 -- `mason-lspconfig` only knows about LSP servers: other tools (formatters,
 -- linters) are listed in `tools` below and installed via the Mason registry.
---
--- NOTE: `mason-lspconfig` v2 no longer has `handlers`: the server configs are
--- registered above via `vim.lsp.config`, and `automatic_enable` (on by default)
--- calls `vim.lsp.enable` for every installed server.
 require("mason").setup()
 require("mason-lspconfig").setup({
-  ensure_installed = vim.tbl_keys(servers),
+  ensure_installed = {
+    "lua_ls", -- needed to work on this config
+    "expert", -- Elixir
+    "jsonls",
+    "rust_analyzer",
+    "ts_ls",
+    "yamlls",
+  },
 })
 
 local tools = {
