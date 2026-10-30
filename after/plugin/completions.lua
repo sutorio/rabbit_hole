@@ -7,7 +7,6 @@
 local completion = require("mini.completion")
 local snippets = require("mini.snippets")
 local icons = require("mini.icons")
-local helpers = require("sutorio.helpers")
 -- }}}
 -- =============================================================================
 -- {{{ Nvim settings
@@ -58,43 +57,28 @@ local function pmenu_has_selection()
   return vim.fn.complete_info({ "selected" }).selected ~= -1
 end
 
-helpers.kmap({
-  ["<Tab>"] = {
-    mode = "i",
-    rhs = function()
-      if snippets.session.get() then
-        return '<Cmd>lua require("mini.snippets").session.jump("next")<CR>'
-      end
-      if vim.fn.pumvisible() == 1 then
-        return pmenu_has_selection() and "<C-y>" or "<C-n><C-y>"
-      end
-      return "<Tab>"
-    end,
-    desc = "accept completion / next snippet tabstop",
-    opts = { expr = true },
-  },
-  ["<S-Tab>"] = {
-    mode = "i",
-    rhs = function()
-      if snippets.session.get() then
-        return '<Cmd>lua require("mini.snippets").session.jump("prev")<CR>'
-      end
-      return "<S-Tab>"
-    end,
-    desc = "previous snippet tabstop",
-    opts = { expr = true },
-  },
-  ["<CR>"] = {
-    mode = "i",
-    rhs = function()
-      if vim.fn.pumvisible() == 1 and pmenu_has_selection() then
-        return "<C-y>"
-      end
-      return "<CR>"
-    end,
-    desc = "confirm selected completion",
-    opts = { expr = true },
-  },
-})
+vim.keymap.set("i", "<Tab>", function()
+  if snippets.session.get() then
+    return '<Cmd>lua require("mini.snippets").session.jump("next")<CR>'
+  end
+  if vim.fn.pumvisible() == 1 then
+    return pmenu_has_selection() and "<C-y>" or "<C-n><C-y>"
+  end
+  return "<Tab>"
+end, { expr = true, desc = "accept completion / next snippet tabstop" })
+
+vim.keymap.set("i", "<S-Tab>", function()
+  if snippets.session.get() then
+    return '<Cmd>lua require("mini.snippets").session.jump("prev")<CR>'
+  end
+  return "<S-Tab>"
+end, { expr = true, desc = "previous snippet tabstop" })
+
+vim.keymap.set("i", "<CR>", function()
+  if vim.fn.pumvisible() == 1 and pmenu_has_selection() then
+    return "<C-y>"
+  end
+  return "<CR>"
+end, { expr = true, desc = "confirm selected completion" })
 -- }}}
 -- =============================================================================
